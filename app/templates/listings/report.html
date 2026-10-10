@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Reportar anuncio · {{ config.SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="container-page max-w-md mt-6">
+  <h1>Reportar anuncio</h1>
+  <p class="text-tierra-600 mt-1 mb-4">«{{ l.title }}»</p>
+  <form method="post" class="card p-5" novalidate>
+    {{ form.hidden_tag() }}
+    <fieldset class="mb-4">
+      <legend class="label">{{ form.reason.label.text }}</legend>
+      <div class="grid gap-3">
+        {% for option in form.reason %}
+        <label class="pick"><input type="radio" name="reason" value="{{ option.data }}" {{ 'checked' if form.reason.data == option.data }}>
+          <span class="pick-body !min-h-[3.25rem] text-left !items-start">{{ option.label.text }}</span></label>
+        {% endfor %}
+      </div>
+      {% for e in form.reason.errors %}<p class="error-text" role="alert">{{ e }}</p>{% endfor %}
+    </fieldset>
+    <label class="label" for="detail">{{ form.detail.label.text }}</label>
+    {{ form.detail(class_="input mb-4", rows=3, maxlength=500) }}
+    <button class="btn btn-primary btn-lg w-full" type="submit">Enviar reporte</button>
+    <a class="btn btn-ghost w-full mt-2" href="{{ listing_url(l) }}">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% from "components/widgets.html" import empty_state %}
+{% block title %}Algo salió mal · {{ config.SITE_NAME }}{% endblock %}
+{% block content %}
+{{ empty_state('Algo salió mal de nuestro lado', 'Ya lo estamos revisando. Intenta de nuevo en un momento.', 'Ir al inicio', url_for('main.home')) }}
+{% endblock %}

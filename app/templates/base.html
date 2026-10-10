@@ -1,0 +1,132 @@
+﻿{% from "components/icons.html" import ui, logo %}
+{% from "components/alerts.html" import flashes %}
+<!doctype html>
+<html lang="es-CO" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ config.SITE_NAME }} · Del campo directo a ti{% endblock %}</title>
+  <meta name="description" content="{% block description %}Compra y vende productos del campo, animales, insumos y servicios en {{ config.SITE_REGION }}. Contacta directo por WhatsApp, sin intermediarios.{% endblock %}">
+  <meta name="theme-color" content="#2E5D22">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+  <meta property="og:site_name" content="{{ config.SITE_NAME }}">
+  <meta property="og:locale" content="es_CO">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Nunito:wght@400;600;700;800&display=swap">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <script>document.documentElement.className = 'js'; try { if (localStorage.getItem('textsize') === 'large') document.documentElement.className += ' text-large'; } catch (e) {}</script>
+  {% block head %}{% endblock %}
+</head>
+<body class="min-h-screen flex flex-col">
+  <a href="#contenido" class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-white focus:p-3">Saltar al contenido</a>
+
+  <header class="bg-white border-b border-tierra-200 sticky top-0 z-30">
+    <div class="container-page flex items-center gap-3 h-16">
+      <a href="{{ url_for('main.home') }}" class="flex items-center gap-2 no-underline text-tierra-900 shrink-0" aria-label="{{ config.SITE_NAME }}, inicio">
+        {{ logo() }}<span class="font-display text-xl font-bold leading-none">{{ config.SITE_NAME }}</span>
+      </a>
+      <nav class="hidden lg:flex items-center gap-1 ml-6" aria-label="Principal">
+        <a class="btn btn-ghost" href="{{ url_for('listings.index') }}">Ver anuncios</a>
+        <a class="btn btn-ghost" href="{{ url_for('prices.index') }}">Precios</a>
+        {% if current_user.is_authenticated %}
+          <a class="btn btn-ghost" href="{{ url_for('listings.favorites') }}">Favoritos</a>
+          <a class="btn btn-ghost" href="{{ url_for('profiles.panel') }}">Mi panel</a>
+          {% if current_user.is_admin %}<a class="btn btn-ghost" href="{{ url_for('admin.dashboard') }}">Admin</a>{% endif %}
+        {% endif %}
+      </nav>
+      <div class="ml-auto flex items-center gap-2">
+        <button type="button" data-text-size aria-pressed="false" class="btn btn-ghost !px-2" title="Cambiar el tamaño de la letra">
+          {{ ui('text-size', 'w-6 h-6') }}<span class="sr-only" data-label>Letra grande</span></button>
+        <button type="button" id="install-btn" class="btn btn-outline btn-sm hidden" aria-label="Instalar la app">{{ ui('download', 'w-4 h-4') }}Instalar app</button>
+        <a href="{{ url_for('profiles.new_listing') }}" class="btn btn-accent hidden sm:inline-flex">{{ ui('plus', 'w-5 h-5') }}Publicar gratis</a>
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('alerts.center') }}" class="relative btn btn-ghost !px-2" aria-label="Notificaciones{% if unread_notifications %}: {{ unread_notifications }} sin leer{% endif %}">
+            {{ ui('bell', 'w-6 h-6') }}{% if unread_notifications %}<span class="absolute -top-0.5 -right-0.5 grid place-items-center min-w-[1.25rem] h-5 px-1 rounded-full bg-secondary-600 text-white text-xs font-extrabold">{{ unread_notifications if unread_notifications < 10 else '9+' }}</span>{% endif %}</a>
+          <form method="post" action="{{ url_for('auth.logout') }}" class="hidden lg:block">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-ghost btn-sm" type="submit">Salir</button>
+          </form>
+        {% else %}
+          <a href="{{ url_for('auth.login') }}" class="btn btn-outline btn-sm">Ingresar</a>
+        {% endif %}
+      </div>
+    </div>
+    <div id="offline-bar" class="hidden bg-sol-300 text-tierra-900 text-center text-sm font-bold py-1" role="status">Sin conexión. Algunas cosas pueden no cargar.</div>
+  </header>
+
+  {{ flashes() }}
+
+  <main id="contenido" class="flex-1 pb-24 lg:pb-8">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="bg-tierra-900 text-tierra-200 mt-8">
+    <div class="container-page py-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4 text-sm">
+      <div>
+        <p class="flex items-center gap-2 font-display text-xl text-white mb-2">{{ logo('w-8 h-8') }}{{ config.SITE_NAME }}</p>
+        <p>Conectamos al campo con quien necesita sus productos. No cobramos comisión: hablas directo con el comprador o el vendedor.</p>
+        <p class="mt-3 flex items-center gap-1">{{ ui('pin', 'w-4 h-4') }}{{ config.SITE_REGION }}</p>
+      </div>
+      <nav aria-label="Enlaces del pie">
+        <p class="font-bold text-white mb-2">Para empezar</p>
+        <ul class="space-y-2">
+          <li><a class="text-tierra-200" href="{{ url_for('main.how_it_works') }}">Cómo funciona</a></li>
+          <li><a class="text-tierra-200" href="{{ url_for('listings.index') }}">Ver anuncios</a></li>
+          <li><a class="text-tierra-200" href="{{ url_for('prices.index') }}">Precios del campo</a></li>
+          <li><a class="text-tierra-200" href="{{ url_for('agenda.index') }}">Agenda del campo</a></li>
+          <li><a class="text-tierra-200" href="{{ url_for('tips.index') }}">Consejos del campo</a></li>
+          <li><a class="text-tierra-200" href="{{ url_for('profiles.new_listing') }}">Publicar gratis</a></li>
+          <li><a class="text-tierra-200" href="{{ url_for('main.faq') }}">Preguntas frecuentes</a></li>
+          <li><a class="text-tierra-200" href="{{ url_for('main.safety_tips') }}">Consejos para comprar seguro</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="Información">
+        <p class="font-bold text-white mb-2">Información</p>
+        <ul class="space-y-2">
+          <li><a class="text-tierra-200" href="{{ url_for('main.about') }}">Quiénes somos</a></li>
+          <li><a class="text-tierra-200" href="{{ url_for('main.contact') }}">Contacto y ayuda</a></li>
+          <li><a class="text-tierra-200" href="{{ url_for('main.terms') }}">Términos y condiciones</a></li>
+          <li><a class="text-tierra-200" href="{{ url_for('main.privacy') }}">Tratamiento de datos personales</a></li>
+        </ul>
+      </nav>
+      <div>
+        <p class="font-bold text-white mb-2">Síguenos</p>
+        <ul class="space-y-2">
+          {% if config.CONTACT_WHATSAPP %}<li><a class="text-tierra-200" href="https://wa.me/57{{ config.CONTACT_WHATSAPP }}" rel="noopener">WhatsApp</a></li>{% endif %}
+          {% if config.SOCIAL_FACEBOOK %}<li><a class="text-tierra-200" href="{{ config.SOCIAL_FACEBOOK }}" rel="noopener" target="_blank">Facebook</a></li>{% endif %}
+          {% if config.SOCIAL_INSTAGRAM %}<li><a class="text-tierra-200" href="{{ config.SOCIAL_INSTAGRAM }}" rel="noopener" target="_blank">Instagram</a></li>{% endif %}
+          <li><a class="text-tierra-200" href="mailto:{{ config.CONTACT_EMAIL }}">{{ config.CONTACT_EMAIL }}</a></li>
+        </ul>
+        <p class="mt-4 text-tierra-300">Mover bovinos, equinos y porcinos exige la guía sanitaria de movilización del ICA. La plataforma no la gestiona.</p>
+      </div>
+    </div>
+    <div class="border-t border-tierra-700 py-4 text-center text-xs text-tierra-300">© {{ now_year }} {{ config.SITE_NAME }} · Hecho para el campo colombiano</div>
+  </footer>
+
+  {% block bottom_nav %}
+  <nav class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-tierra-200 grid grid-cols-5 text-xs font-bold" aria-label="Menú">
+    {% set ep = request.endpoint or '' %}
+    {% macro tab(href, icon, label, active) %}
+    <a href="{{ href }}" class="flex flex-col items-center justify-center gap-0.5 py-2 min-h-[3.75rem] no-underline {{ 'text-primary-700' if active else 'text-tierra-600' }}" {% if active %}aria-current="page"{% endif %}>
+      {{ ui(icon, 'w-6 h-6') }}<span>{{ label }}</span></a>
+    {% endmacro %}
+    {{ tab(url_for('main.home'), 'home', 'Inicio', ep == 'main.home') }}
+    {{ tab(url_for('listings.index'), 'search', 'Buscar', ep == 'listings.index') }}
+    <a href="{{ url_for('profiles.new_listing') }}" class="flex flex-col items-center justify-center gap-0.5 -mt-5 text-tierra-900 no-underline">
+      <span class="grid place-items-center w-14 h-14 rounded-full bg-sol-400 shadow-card border-4 border-white">{{ ui('plus', 'w-7 h-7') }}</span><span>Publicar</span></a>
+    {{ tab(url_for('listings.favorites'), 'heart', 'Favoritos', ep == 'listings.favorites') }}
+    {{ tab(url_for('profiles.panel') if current_user.is_authenticated else url_for('auth.login'), 'user', 'Mi cuenta' if current_user.is_authenticated else 'Ingresar', ep.startswith('profiles.') or ep.startswith('auth.')) }}
+  </nav>
+  {% endblock %}
+
+  <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/a11y.js') }}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
+
+
+

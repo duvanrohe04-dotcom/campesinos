@@ -1,0 +1,15 @@
+﻿{% extends "base.html" %}
+{% block title %}Admin · {{ config.SITE_NAME }}{% endblock %}
+{% block content %}
+{% set ep = request.endpoint or '' %}
+<div class="container-page mt-4">
+  <nav class="flex gap-2 overflow-x-auto pb-2" aria-label="Administración">
+    {% for e, t in (('admin.dashboard', 'Resumen'), ('admin.users', 'Usuarios'), ('admin.listings', 'Anuncios'), ('admin.reports', 'Reportes'), ('admin.messages', 'Mensajes'), ('admin.ratings_list', 'Calificaciones'),
+                    ('admin.events', 'Agenda'), ('admin.articles', 'Consejos'), ('admin.categories', 'Categorías'), ('admin.municipalities', 'Municipios'), ('main.styleguide', 'Estilos')) %}
+    <a href="{{ url_for(e) }}" class="chip no-underline whitespace-nowrap {{ 'chip-active' if ep == e or (e == 'admin.categories' and ep.startswith('admin.categor')) or (e == 'admin.municipalities' and ep.startswith('admin.municip')) }}">{{ t }}</a>
+    {% endfor %}
+  </nav>
+  <div class="mt-4">{% block admin %}{% endblock %}</div>
+</div>
+{% endblock %}
+

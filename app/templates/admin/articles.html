@@ -1,0 +1,15 @@
+{% extends "admin/base.html" %}
+{% from "components/buttons.html" import post_button %}
+{% block admin %}
+<div class="flex items-center justify-between gap-3 flex-wrap"><h1>Consejos del campo</h1><a class="btn btn-primary" href="{{ url_for('admin.article_new') }}">Nuevo artículo</a></div>
+<div class="card divide-y divide-tierra-200 mt-4">
+  {% for a in articles %}
+  <div class="p-3 flex items-center justify-between gap-3 flex-wrap">
+    <div class="min-w-0"><p class="font-bold">{{ a.title }} <span class="badge badge-neutral">{{ categories.get(a.category, a.category) }}</span>{% if not a.is_published %} <span class="badge badge-alquilo">Borrador</span>{% endif %}</p>
+      <p class="text-sm text-tierra-600">{{ a.published_at.strftime('%d/%m/%Y') }} · {{ a.reading_minutes }} min · <a href="{{ url_for('tips.detail', slug=a.slug) }}">ver</a></p></div>
+    <div class="flex gap-2"><a class="btn btn-outline btn-sm" href="{{ url_for('admin.article_edit', article_id=a.id) }}">Editar</a>
+      {{ post_button(url_for('admin.article_delete', article_id=a.id), 'Eliminar', 'danger', 'trash', confirm='¿Eliminar este artículo?') }}</div>
+  </div>
+  {% else %}<p class="p-4 text-tierra-600">Aún no hay artículos.</p>{% endfor %}
+</div>
+{% endblock %}

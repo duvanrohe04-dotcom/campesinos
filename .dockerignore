@@ -1,0 +1,25 @@
+# Lo que NO debe entrar a la imagen de Docker (secretos, datos locales y peso inútil)
+.git
+.github
+.env
+.env.*
+!.env.example
+!.env.production.example
+.venv
+venv
+node_modules
+instance
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+.coverage
+htmlcov
+tests
+backups
+AUDITORIA.md
+*.md
+!README.md
+# Las fotos subidas viven en un volumen, no en la imagen
+app/static/uploads/*
+!app/static/uploads/.gitkeep

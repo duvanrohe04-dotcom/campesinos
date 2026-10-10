@@ -1,0 +1,42 @@
+{% from "components/icons.html" import ui, empty_art %}
+
+{# «¿Necesitas ayuda?»: WhatsApp de soporte si está configurado (CONTACT_WHATSAPP); si no, la página de Contacto #}
+{% macro help_link(text="Necesito ayuda", message="Hola, necesito ayuda con mi cuenta de Campo Directo.") -%}
+{%- if config.CONTACT_WHATSAPP -%}
+<a class="btn btn-outline w-full" href="{{ whatsapp_url(config.CONTACT_WHATSAPP, message) }}" target="_blank" rel="noopener">{{ ui('whatsapp', 'w-5 h-5') }}{{ text }}</a>
+{%- else -%}
+<a class="btn btn-outline w-full" href="{{ url_for('main.contact') }}">{{ ui('info', 'w-5 h-5') }}{{ text }}</a>
+{%- endif -%}
+{%- endmacro %}
+
+{# Modal accesible con <dialog>. Abrir: <button data-modal-open="id">. Contenido: {% call modal(...) %} #}
+{% macro modal(id, title) -%}
+<dialog id="{{ id }}" class="rounded-2xl p-0 w-[min(92vw,28rem)] backdrop:bg-black/50 shadow-card" aria-labelledby="{{ id }}-t">
+  <div class="p-5">
+    <div class="flex items-start justify-between gap-3 mb-3">
+      <h2 id="{{ id }}-t" class="!text-xl">{{ title }}</h2>
+      <button type="button" class="btn btn-ghost btn-sm !px-2" data-modal-close aria-label="Cerrar">{{ ui('x', 'w-5 h-5') }}</button>
+    </div>
+    {{ caller() }}
+  </div>
+</dialog>
+{%- endmacro %}
+
+{% macro empty_state(title, text="", action_label=None, action_href=None) -%}
+<div class="text-center py-10 px-4 flex flex-col items-center gap-3">
+  {{ empty_art() }}
+  <h2 class="!text-xl">{{ title }}</h2>
+  {% if text %}<p class="text-tierra-600 max-w-sm">{{ text }}</p>{% endif %}
+  {% if action_label %}<a href="{{ action_href }}" class="btn btn-primary btn-lg mt-1">{{ action_label }}</a>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro pagination(p, endpoint, args) -%}
+{% if p.pages > 1 %}
+<nav class="flex items-center justify-between gap-3 mt-6" aria-label="Páginas">
+  {% if p.has_prev %}<a class="btn btn-outline" href="{{ url_for(endpoint, page=p.prev_num, **args) }}">{{ ui('left', 'w-5 h-5') }}Anterior</a>{% else %}<span></span>{% endif %}
+  <span class="text-sm font-bold text-tierra-700">Página {{ p.page }} de {{ p.pages }}</span>
+  {% if p.has_next %}<a class="btn btn-outline" href="{{ url_for(endpoint, page=p.next_num, **args) }}">Siguiente{{ ui('right', 'w-5 h-5') }}</a>{% else %}<span></span>{% endif %}
+</nav>
+{% endif %}
+{%- endmacro %}

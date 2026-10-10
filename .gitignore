@@ -1,0 +1,13 @@
+﻿node_modules/
+.venv/
+__pycache__/
+*.pyc
+instance/
+.env
+app/static/uploads/*
+!app/static/uploads/.gitkeep
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+

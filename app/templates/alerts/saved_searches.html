@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "components/icons.html" import ui %}
+{% from "components/buttons.html" import post_button %}
+{% from "components/widgets.html" import empty_state %}
+{% block title %}Mis búsquedas guardadas · {{ config.SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="container-page max-w-2xl mt-6">
+  <h1>Mis búsquedas guardadas</h1>
+  <p class="text-tierra-700 mt-2 mb-5">Te avisamos en <a class="font-bold" href="{{ url_for('alerts.center') }}">Notificaciones</a> cuando se publique algo nuevo que coincida.</p>
+  {% if searches %}
+  <ul class="grid gap-3">
+    {% for s in searches %}
+    <li class="card p-4 flex items-center justify-between gap-3 flex-wrap">
+      <div class="min-w-0"><p class="font-extrabold">{{ s.name }}</p><p class="text-sm text-tierra-600">Guardada {{ s.created_at|timeago }}</p></div>
+      <div class="flex gap-2">
+        <a class="btn btn-outline btn-sm" href="{{ url_for('listings.index', **s.filters) }}">{{ ui('search', 'w-4 h-4') }}Ver resultados</a>
+        {{ post_button(url_for('alerts.delete', search_id=s.id), 'Borrar', 'danger', 'trash', confirm='¿Borrar esta búsqueda?') }}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  {{ empty_state('Aún no guardas búsquedas', 'En «Ver anuncios», elige tus filtros y toca «Avisarme de anuncios nuevos».', 'Buscar anuncios', url_for('listings.index')) }}
+  {% endif %}
+</div>
+{% endblock %}

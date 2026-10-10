@@ -1,0 +1,46 @@
+﻿{% extends "base.html" %}
+{% block title %}Términos y condiciones · {{ config.SITE_NAME }}{% endblock %}
+{% block description %}Condiciones de uso de {{ config.SITE_NAME }}: qué es la plataforma, responsabilidades de compradores y vendedores y reglas para publicar.{% endblock %}
+{% block content %}
+<article class="container-page max-w-3xl mt-6 leading-relaxed text-lg [&_h2]:mt-8 [&_h2]:mb-2 [&_h2]:!text-xl [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:grid [&_ul]:gap-1">
+  {% include "main/_legal_banner.html" %}
+  <h1>Términos y condiciones de uso</h1>
+  <p class="text-tierra-600">Última actualización: [FECHA]</p>
+
+  <h2>1. Quiénes somos y qué es esta plataforma</h2>
+  <p>{{ config.SITE_NAME }} (en adelante «la Plataforma») es operada por [NOMBRE O RAZÓN SOCIAL], identificado con [NIT / C.C.], con domicilio en [CIUDAD, SANTANDER] (en adelante «el Operador»). La Plataforma es un espacio en línea que permite a personas ofrecer y buscar productos agrícolas, animales, insumos, maquinaria y servicios del campo, y contactarse directamente entre sí.</p>
+
+  <h2>2. La Plataforma solo conecta</h2>
+  <p>El Operador <strong>no es parte</strong> de los negocios entre compradores y vendedores. No vende, no compra, no cobra comisiones, no recibe pagos, no almacena ni transporta productos y no garantiza la calidad, el estado, la cantidad ni la existencia de lo ofrecido. Cada negocio, su precio, pago y entrega se acuerdan directamente entre las personas.</p>
+
+  <h2>3. Registro y cuenta</h2>
+  <ul>
+    <li>Para publicar o guardar favoritos se requiere una cuenta con un celular colombiano válido y una contraseña.</li>
+    <li>La información entregada debe ser veraz y estar actualizada. Cada persona es responsable de guardar su contraseña.</li>
+    <li>Se pueden suspender cuentas que incumplan estos términos.</li>
+  </ul>
+
+  <h2>4. Reglas para publicar</h2>
+  <ul>
+    <li>Publicar solo lo que realmente se tiene o se necesita, con información y fotos verdaderas.</li>
+    <li>Está prohibido publicar animales robados, enfermos sin advertirlo, productos ilegales, engaños o contenido ofensivo.</li>
+    <li>Los anuncios vencen a los 30 días y pueden renovarse. El Operador puede ocultar o retirar anuncios que incumplan estas reglas o reciban reportes fundados.</li>
+  </ul>
+
+  <h2>5. Movilización de animales (ICA)</h2>
+  <p>El transporte de bovinos, equinos y porcinos requiere la guía sanitaria de movilización del Instituto Colombiano Agropecuario (ICA) y el cumplimiento de la normativa sanitaria vigente. La Plataforma no tramita ni verifica estos documentos; es responsabilidad de las partes. [CONFIRMAR CON ABOGADO: alcance y referencias normativas].</p>
+
+  <h2>6. Responsabilidad</h2>
+  <p>Se recomienda ver el producto o animal en persona, no pagar por adelantado a desconocidos y desconfiar de ofertas sospechosas. En la medida permitida por la ley, el Operador no responde por pérdidas derivadas de negocios entre usuarios, ni por la veracidad de los anuncios. [REVISAR LIMITACIÓN DE RESPONSABILIDAD Y DERECHOS DEL CONSUMIDOR - LEY 1480 DE 2011].</p>
+
+  <h2>7. Contenido de los usuarios</h2>
+  <p>Quien publica conserva la titularidad de sus textos y fotos y autoriza al Operador a mostrarlos en la Plataforma, en su sitio web, en redes y en materiales para promover el anuncio. Debe contar con los derechos sobre las fotos que sube.</p>
+
+  <h2>8. Datos personales</h2>
+  <p>El tratamiento de datos personales se rige por la <a href="{{ url_for('main.privacy') }}">Política de tratamiento de datos personales</a>, conforme a la Ley 1581 de 2012.</p>
+
+  <h2>9. Cambios, ley aplicable y contacto</h2>
+  <p>Estos términos pueden actualizarse; los cambios importantes se avisarán en la Plataforma. Se rigen por las leyes de la República de Colombia. Para dudas escribe a <a href="mailto:{{ config.CONTACT_EMAIL }}">{{ config.CONTACT_EMAIL }}</a> o usa el <a href="{{ url_for('main.contact') }}">formulario de contacto</a>.</p>
+</article>
+{% endblock %}
+

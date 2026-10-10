@@ -1,0 +1,105 @@
+﻿{% extends "base.html" %}
+{% from "components/icons.html" import ui, cat_icon %}
+{% from "components/buttons.html" import post_button %}
+{% from "components/badges.html" import ad_badge, status_badge %}
+{% from "components/cards.html" import stat, price_text, avatar %}
+{% from "components/widgets.html" import empty_state %}
+{% block title %}Mi panel · {{ config.SITE_NAME }}{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+<script src="{{ url_for('static', filename='js/panel.js') }}" defer></script>
+{% endblock %}
+{% block content %}
+<div class="container-page mt-6">
+  <div class="flex items-center justify-between gap-3 flex-wrap">
+    <div class="flex items-center gap-3">{{ avatar(current_user, "w-14 h-14") }}<div><h1>Mi panel</h1><p class="text-tierra-600">Hola, {{ current_user.name.split()[0] }}</p></div></div>
+    <div class="flex gap-2">
+      <a class="btn btn-outline btn-sm" href="{{ url_for('profiles.edit_profile') }}">{{ ui('user', 'w-4 h-4') }}Mi perfil</a>
+      <a class="btn btn-accent" href="{{ url_for('profiles.new_listing') }}">{{ ui('plus', 'w-5 h-5') }}Publicar</a>
+    </div>
+  </div>
+
+  <section class="grid sm:grid-cols-2 gap-3 mt-4" aria-label="Qué quieres hacer">
+    <a class="btn btn-primary btn-lg" href="{{ url_for('profiles.new_listing', tipo='vendo') }}">{{ ui('tag', 'w-6 h-6') }}Quiero vender algo</a>
+    <a class="btn btn-secondary btn-lg" href="{{ url_for('profiles.new_listing', tipo='compro') }}">{{ ui('search', 'w-6 h-6') }}Busco comprar algo</a>
+  </section>
+
+  {% if not current_user.email_verified %}
+  <div class="alert alert-info mt-4" role="status">{{ ui('shield', 'w-6 h-6 shrink-0') }}
+    {% if current_user.email %}
+    <div class="flex-1"><strong>Verifica tu correo</strong> para poder recuperar tu cuenta y para que los compradores confíen más en ti.
+      <a class="btn btn-primary btn-sm ml-1 mt-1" href="{{ url_for('auth.verify_email') }}">Verificar ahora</a></div>
+    {% else %}
+    <div class="flex-1"><strong>Agrega tu correo</strong> para poder recuperar tu cuenta si olvidas la contraseña.
+      <a class="btn btn-primary btn-sm ml-1 mt-1" href="{{ url_for('profiles.edit_profile') }}">Agregar correo</a></div>
+    {% endif %}
+  </div>
+  {% endif %}
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
+    {{ stat('Anuncios activos', stats.active, 'tag') }}
+    {{ stat('Vistas', stats.views, 'eye') }}
+    {{ stat('Contactos (WhatsApp y llamadas)', stats.contacts, 'phone') }}
+    {{ stat('Vendidos', stats.sold, 'check') }}
+  </div>
+
+  <section class="card p-4 mt-4" aria-labelledby="semana">
+    <h2 id="semana" class="!text-lg !font-sans !font-extrabold">Esta semana</h2>
+    <p class="text-tierra-700"><strong>{{ weekly.total_views }}</strong> {{ 'vista' if weekly.total_views == 1 else 'vistas' }} · <strong>{{ weekly.total_contacts }}</strong> {{ 'contacto' if weekly.total_contacts == 1 else 'contactos' }} (WhatsApp y llamadas)</p>
+    <div class="relative h-48 mt-3"><canvas id="weekly-chart" role="img" aria-label="Gráfico de vistas y contactos de los últimos 7 días"></canvas></div>
+    <details class="mt-2"><summary class="cursor-pointer font-bold text-sm">Ver en tabla</summary>
+      <table class="w-full text-sm mt-2"><thead><tr class="text-left text-tierra-600"><th>Día</th><th>Vistas</th><th>Contactos</th></tr></thead>
+        <tbody>{% for label in weekly.labels %}<tr><td>{{ label }}</td><td>{{ weekly.views[loop.index0] }}</td><td>{{ weekly.contacts[loop.index0] }}</td></tr>{% endfor %}</tbody></table></details>
+    <script type="application/json" id="weekly-data">{{ {"labels": weekly.labels, "views": weekly.views, "contacts": weekly.contacts}|tojson }}</script>
+  </section>
+
+  {% for l in expiring %}
+  <div class="alert alert-info mt-3" role="status">{{ ui('clock', 'w-6 h-6 shrink-0') }}
+    <div class="flex-1">«{{ l.title }}» vence en {{ [l.days_left, 0]|max }} {{ 'día' if l.days_left == 1 else 'días' }}.
+      <span class="inline-block ml-1">{{ post_button(url_for('profiles.listing_action', listing_id=l.id, action='renovar'), 'Renovar 30 días', 'primary', 'refresh') }}</span></div></div>
+  {% endfor %}
+
+  <h2 class="!text-2xl mt-8 mb-3">Mis anuncios</h2>
+  {% if items %}
+  <ul class="grid gap-3">
+    {% for l in items %}
+    <li class="card p-3">
+      <div class="flex gap-3">
+        <a href="{{ listing_url(l) }}" aria-label="Ver el anuncio {{ l.title }}" class="shrink-0 w-24 h-24 rounded-xl bg-primary-50 overflow-hidden grid place-items-center text-primary-300">
+          {% if l.main_image %}<img src="{{ url_for('static', filename='uploads/' ~ l.main_image.thumb) }}" alt="" loading="lazy" width="96" height="96" class="w-full h-full object-cover">{% else %}{{ cat_icon(l.category.icon, 'w-12 h-12') }}{% endif %}
+        </a>
+        <div class="min-w-0 flex-1">
+          <div class="flex flex-wrap gap-1 mb-1">{{ status_badge(l.status) }}{{ ad_badge(l.ad_type) }}</div>
+          <a href="{{ listing_url(l) }}" class="font-extrabold text-tierra-900 no-underline block truncate">{{ l.title }}</a>
+          <p class="leading-none mt-1">{{ price_text(l, false) }}</p>
+          <p class="text-sm text-tierra-600 mt-1">{{ ui('eye', 'w-4 h-4 inline') }} {{ l.views_count }} · {{ ui('whatsapp', 'w-4 h-4 inline') }} {{ l.whatsapp_clicks }} · {{ ui('phone', 'w-4 h-4 inline') }} {{ l.call_clicks }}
+            {% if l.status == 'active' and l.days_left is not none %}· vence en {{ [l.days_left, 0]|max }} d{% endif %}</p>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <a class="btn btn-outline btn-sm" href="{{ url_for('profiles.edit_listing', listing_id=l.id) }}">{{ ui('edit', 'w-4 h-4') }}Editar</a>
+        {% if l.status == 'active' %}
+          {{ post_button(url_for('profiles.listing_action', listing_id=l.id, action='pausar'), 'Pausar', 'outline', 'pause') }}
+          {{ post_button(url_for('profiles.listing_action', listing_id=l.id, action='vendido'), 'Vendido', 'primary', 'check') }}
+        {% elif l.status in ('paused', 'sold') %}
+          {{ post_button(url_for('profiles.listing_action', listing_id=l.id, action='activar'), 'Activar', 'primary', 'play') }}
+        {% endif %}
+        {% if l.status in ('active', 'expired', 'paused') %}
+          {{ post_button(url_for('profiles.listing_action', listing_id=l.id, action='renovar'), 'Renovar', 'outline', 'refresh') }}
+        {% endif %}
+        <a class="btn btn-outline btn-sm" href="{{ url_for('profiles.new_listing', copiar=l.id) }}">{{ ui('copy', 'w-4 h-4') }}Duplicar</a>
+        {% if l.status == 'active' %}
+        <a class="btn btn-outline btn-sm" href="{{ url_for('listings.poster_pdf', listing_id=l.id) }}">{{ ui('download', 'w-4 h-4') }}Cartel PDF</a>
+        <a class="btn btn-outline btn-sm" href="{{ url_for('listings.status_image', listing_id=l.id) }}">{{ ui('image', 'w-4 h-4') }}Imagen estado</a>
+        {% endif %}
+        {{ post_button(url_for('profiles.listing_action', listing_id=l.id, action='eliminar'), 'Eliminar', 'danger', 'trash', confirm='¿Eliminar este anuncio para siempre?') }}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  {{ empty_state('Aún no has publicado nada', 'Publicar es gratis y toma 4 pasos sencillos.', 'Publicar mi primer anuncio', url_for('profiles.new_listing')) }}
+  {% endif %}
+</div>
+{% endblock %}
+
+

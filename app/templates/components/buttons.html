@@ -1,0 +1,42 @@
+{% from "components/icons.html" import ui %}
+
+{# kind: primary | secondary | accent | outline | ghost | danger | whatsapp | call #}
+{% macro button(label, href=None, kind="primary", size="", icon=None, type="button", full=False, extra="") -%}
+{%- set cls = "btn btn-" ~ kind ~ (" btn-" ~ size if size else "") ~ (" w-full" if full else "") ~ (" " ~ extra if extra else "") -%}
+{%- if href -%}
+<a href="{{ href }}" class="{{ cls }}">{% if icon %}{{ ui(icon, 'w-5 h-5') }}{% endif %}{{ label }}</a>
+{%- else -%}
+<button type="{{ type }}" class="{{ cls }}">{% if icon %}{{ ui(icon, 'w-5 h-5') }}{% endif %}{{ label }}</button>
+{%- endif -%}
+{%- endmacro %}
+
+{# El celular no va en estos enlaces: href lleva a una ruta del sitio que lo revela o redirige (ver listings/routes.py) #}
+{% macro whatsapp_button(href, label="Escribir por WhatsApp", full=True) -%}
+<a href="{{ href }}" target="_blank" rel="noopener nofollow" class="btn btn-lg btn-whatsapp{{ ' w-full' if full }}">
+  {{ ui('whatsapp', 'w-6 h-6') }}{{ label }}
+</a>
+{%- endmacro %}
+
+{% macro call_button(href, label="Ver celular y llamar", full=True) -%}
+<a href="{{ href }}" rel="nofollow" class="btn btn-lg btn-call{{ ' w-full' if full }}">
+  {{ ui('phone', 'w-6 h-6') }}{{ label }}
+</a>
+{%- endmacro %}
+
+{# «Escuchar»: lee en voz alta un texto o el contenido de un elemento (#id). Se oculta si el navegador no lo soporta. #}
+{% macro speak_button(what, label="Escuchar", size="sm") -%}
+<button type="button" class="btn btn-outline btn-{{ size }}" data-speak="{{ what }}" aria-pressed="false" hidden>{{ ui('speaker', 'w-5 h-5') }}{{ label }}</button>
+{%- endmacro %}
+
+{# Micrófono para dictar en un campo (id). Se oculta si el navegador no soporta reconocimiento de voz. #}
+{% macro dictate_button(field_id, label="Hablar") -%}
+<button type="button" class="btn btn-outline btn-sm" data-dictate="{{ field_id }}" aria-pressed="false" aria-label="Dictar con la voz: {{ label }}" hidden>{{ ui('mic', 'w-5 h-5') }}{{ label }}</button>
+{%- endmacro %}
+
+{# Botón que envía POST con CSRF (acciones rápidas) #}
+{% macro post_button(url, label, kind="outline", icon=None, size="sm", confirm=None, extra="") -%}
+<form method="post" action="{{ url }}" class="inline" {% if confirm %}data-confirm="{{ confirm }}"{% endif %}>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button type="submit" class="btn btn-{{ kind }} btn-{{ size }} {{ extra }}">{% if icon %}{{ ui(icon, 'w-4 h-4') }}{% endif %}{{ label }}</button>
+</form>
+{%- endmacro %}

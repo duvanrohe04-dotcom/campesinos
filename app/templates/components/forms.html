@@ -1,0 +1,116 @@
+{% from "components/icons.html" import cat_icon %}
+
+{% macro err(errors, name) -%}
+{%- if errors and errors.get(name) %}<p class="error-text" role="alert" id="err-{{ name }}">{{ errors[name] }}</p>{% endif -%}
+{%- endmacro %}
+
+{# Campo de texto / número. values y errors son diccionarios. #}
+{% macro text_field(name, label, values, errors, help="", ph="", type="text", inputmode=None, maxlength=None, required=False, extra="") -%}
+<div class="mb-4">
+  <label class="label" for="f-{{ name }}">{{ label }}{% if required %} <span class="text-secondary-700" aria-hidden="true">*</span>{% endif %}</label>
+  <input class="input{{ ' input-error' if errors and errors.get(name) }}" id="f-{{ name }}" name="{{ name }}" type="{{ type }}"
+         value="{{ values.get(name, '') }}" placeholder="{{ ph }}" {% if inputmode %}inputmode="{{ inputmode }}"{% endif %}
+         {% if maxlength %}maxlength="{{ maxlength }}"{% endif %} {{ extra|safe }}
+         {% if errors and errors.get(name) %}aria-invalid="true" aria-describedby="err-{{ name }}"{% endif %}>
+  {% if help %}<p class="help">{{ help }}</p>{% endif %}
+  {{ err(errors, name) }}
+</div>
+{%- endmacro %}
+
+{% macro textarea_field(name, label, values, errors, help="", ph="", rows=4, maxlength=None) -%}
+<div class="mb-4">
+  <label class="label" for="f-{{ name }}">{{ label }}</label>
+  <textarea class="input{{ ' input-error' if errors and errors.get(name) }}" id="f-{{ name }}" name="{{ name }}" rows="{{ rows }}"
+            placeholder="{{ ph }}" {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}>{{ values.get(name, '') }}</textarea>
+  {% if help %}<p class="help">{{ help }}</p>{% endif %}
+  {{ err(errors, name) }}
+</div>
+{%- endmacro %}
+
+{# options: lista de (valor, texto) #}
+{% macro select_field(name, label, options, values, errors, help="", blank="Elige una opción", required=False, extra="") -%}
+<div class="mb-4">
+  <label class="label" for="f-{{ name }}">{{ label }}{% if required %} <span class="text-secondary-700" aria-hidden="true">*</span>{% endif %}</label>
+  <select class="input{{ ' input-error' if errors and errors.get(name) }}" id="f-{{ name }}" name="{{ name }}" {{ extra|safe }}>
+    <option value="">{{ blank }}</option>
+    {% for v, t in options %}<option value="{{ v }}" {{ 'selected' if values.get(name, '')|string == v|string }}>{{ t }}</option>{% endfor %}
+  </select>
+  {% if help %}<p class="help">{{ help }}</p>{% endif %}
+  {{ err(errors, name) }}
+</div>
+{%- endmacro %}
+
+{# Sí / No con botones grandes #}
+{% macro yesno_field(name, label, values, errors, required=False) -%}
+<fieldset class="mb-4">
+  <legend class="label">{{ label }}{% if required %} <span class="text-secondary-700">*</span>{% endif %}</legend>
+  <div class="grid grid-cols-2 gap-3">
+    {% for v, t in (('si', 'Sí'), ('no', 'No')) %}
+    <label class="pick"><input type="radio" name="{{ name }}" value="{{ v }}" {{ 'checked' if values.get(name) == v }}>
+      <span class="pick-body !min-h-[3.25rem] text-lg">{{ t }}</span></label>
+    {% endfor %}
+  </div>
+  {{ err(errors, name) }}
+</fieldset>
+{%- endmacro %}
+
+{# Opciones como fichas grandes (radio). options: lista de (valor, texto) #}
+{% macro choice_pick(name, label, options, values, errors, cols="grid-cols-2", required=False, help="") -%}
+<fieldset class="mb-4">
+  <legend class="label">{{ label }}{% if required %} <span class="text-secondary-700">*</span>{% endif %}</legend>
+  <div class="grid {{ cols }} gap-3">
+    {% for v, t in options %}
+    <label class="pick"><input type="radio" name="{{ name }}" value="{{ v }}" {{ 'checked' if values.get(name) == v }}>
+      <span class="pick-body !min-h-[3.25rem]">{{ t }}</span></label>
+    {% endfor %}
+  </div>
+  {# Si hay una opción «Otra/Otro», se pide escribir cuál es (app.js la muestra solo al elegirla) #}
+  {% if options|map('first')|map('lower')|select('in', OTHER_CHOICES)|list %}
+  <div class="mt-3" data-other-for="{{ name }}">
+    <label class="label" for="f-{{ name }}__other">¿Cuál? Escríbelo</label>
+    <input class="input" id="f-{{ name }}__other" name="{{ name }}__other" type="text" maxlength="{{ ATTR_TEXT_MAX }}" value="{{ values.get(name ~ '__other', '') }}" autocomplete="off">
+  </div>
+  {% endif %}
+  {% if help %}<p class="help">{{ help }}</p>{% endif %}
+  {{ err(errors, name) }}
+</fieldset>
+{%- endmacro %}
+
+{# Campo de WTForms (login/registro) #}
+{% macro wtf_field(field, help="", ph="", inputmode=None, autocomplete=None) -%}
+<div class="mb-4">
+  <label class="label" for="{{ field.id }}">{{ field.label.text }}</label>
+  {{ field(class_="input" ~ (" input-error" if field.errors else ""), placeholder=ph, inputmode=inputmode, autocomplete=autocomplete) }}
+  {% if help %}<p class="help">{{ help }}</p>{% endif %}
+  {% for e in field.errors %}<p class="error-text" role="alert">{{ e }}</p>{% endfor %}
+</div>
+{%- endmacro %}
+
+{# Casilla de WTForms con etiqueta grande #}
+{% macro wtf_checkbox(field) -%}
+<label class="flex items-center gap-3 mb-4 text-base font-bold cursor-pointer">
+  {{ field(class_="w-6 h-6 accent-primary-700") }} {{ field.label.text }}
+</label>
+{%- endmacro %}
+
+{# Select de veredas filtrado por municipio (lo maneja app.js con data-mun) #}
+{# La opción «Otra» (valor 0) muestra un campo para escribir el nombre (village_other). #}
+{% macro village_select(name, villages, municipality_select_id, selected="", other_value="", other_error="", label="Vereda (opcional)") -%}
+{% set chosen = '' if selected is none else selected|string %}
+{% set is_other = chosen == VILLAGE_OTHER_ID|string or (chosen == '' and other_value) %}
+<div class="mb-4">
+  <label class="label" for="f-{{ name }}">{{ label }}</label>
+  <select class="input" id="f-{{ name }}" name="{{ name }}" data-village-select data-mun-source="{{ municipality_select_id }}">
+    <option value="">Elige tu vereda</option>
+    {% for v in villages %}<option value="{{ v.id }}" data-mun="{{ v.municipality_id }}" {{ 'selected' if chosen == v.id|string }}>{{ v.name }}</option>{% endfor %}
+    <option value="{{ VILLAGE_OTHER_ID }}" {{ 'selected' if is_other }}>Otra (escribir cuál)</option>
+  </select>
+</div>
+<div class="mb-4" data-village-other>
+  <label class="label" for="f-village_other">¿Cómo se llama tu vereda?</label>
+  <input class="input{{ ' input-error' if other_error }}" id="f-village_other" name="village_other" type="text" maxlength="{{ VILLAGE_OTHER_MAX }}"
+         value="{{ other_value }}" placeholder="Escribe el nombre de la vereda" autocomplete="off"
+         {% if other_error %}aria-invalid="true" aria-describedby="err-village_other"{% endif %}>
+  {% if other_error %}<p class="error-text" role="alert" id="err-village_other">{{ other_error }}</p>{% endif %}
+</div>
+{%- endmacro %}

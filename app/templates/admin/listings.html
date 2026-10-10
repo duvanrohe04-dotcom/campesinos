@@ -1,0 +1,22 @@
+{% extends "admin/base.html" %}
+{% from "components/buttons.html" import post_button %}
+{% from "components/badges.html" import status_badge %}
+{% block admin %}
+<h1>Anuncios</h1>
+<div class="flex gap-2 overflow-x-auto my-3">
+  <a class="chip no-underline {{ 'chip-active' if not status }}" href="{{ url_for('admin.listings') }}">Todos</a>
+  {% for k, t in STATUSES.items() %}<a class="chip no-underline {{ 'chip-active' if status == k }}" href="{{ url_for('admin.listings', estado=k) }}">{{ t }}</a>{% endfor %}
+</div>
+<div class="card divide-y divide-tierra-200">
+  {% for l in listings %}
+  <div class="p-3 flex items-center justify-between gap-3 flex-wrap">
+    <div class="min-w-0"><a class="font-bold block truncate" href="{{ listing_url(l) }}">{{ l.title }}</a>
+      <span class="text-sm text-tierra-600">{{ l.user.name }} · {{ l.category.name }} · {{ l.created_at|timeago }}</span></div>
+    <div class="flex gap-2 items-center">{{ status_badge(l.status) }}
+      {% if l.status == 'removed' %}{{ post_button(url_for('admin.listing_action', listing_id=l.id, action='restaurar'), 'Restaurar', 'primary') }}
+      {% else %}{{ post_button(url_for('admin.listing_action', listing_id=l.id, action='retirar'), 'Retirar', 'danger') }}{% endif %}
+      {{ post_button(url_for('admin.listing_action', listing_id=l.id, action='eliminar'), 'Eliminar', 'danger', 'trash', confirm='¿Eliminar definitivamente?') }}</div>
+  </div>
+  {% else %}<p class="p-4 text-tierra-600">No hay anuncios.</p>{% endfor %}
+</div>
+{% endblock %}

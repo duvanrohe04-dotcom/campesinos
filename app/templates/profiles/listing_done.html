@@ -1,0 +1,22 @@
+﻿{% extends "base.html" %}
+{% from "components/icons.html" import ui %}
+{% from "components/cards.html" import listing_card %}
+{% block title %}¡Anuncio publicado! · {{ config.SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="container-page max-w-md mt-6 text-center">
+  <span class="inline-grid place-items-center w-20 h-20 rounded-full bg-primary-100 text-primary-700">{{ ui('check', 'w-12 h-12') }}</span>
+  <h1 class="mt-3">¡Listo, tu anuncio está publicado!</h1>
+  <p class="text-tierra-600 mt-1">Ya lo pueden ver los compradores. Dura 30 días y puedes renovarlo con un toque.</p>
+
+  <div class="mt-5 text-left max-w-xs mx-auto">{{ listing_card(l) }}</div>
+
+  <div class="grid gap-3 mt-6">
+    <a class="btn btn-whatsapp btn-lg" href="{{ wa_share }}" target="_blank" rel="noopener">{{ ui('whatsapp', 'w-6 h-6') }}Compartir por WhatsApp</a>
+    <a class="btn btn-outline btn-lg" href="{{ listing_url(l) }}">Ver mi anuncio</a>
+    <a class="btn btn-ghost" href="{{ url_for('profiles.new_listing', copiar=l.id) }}">{{ ui('copy', 'w-5 h-5') }}Publicar otro parecido</a>
+    <a class="btn btn-ghost" href="{{ url_for('profiles.panel') }}">Ir a mi panel</a>
+  </div>
+</div>
+<script>try { localStorage.removeItem('draft:new'); } catch (e) {}</script>
+{% endblock %}
+

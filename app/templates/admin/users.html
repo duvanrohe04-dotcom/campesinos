@@ -1,0 +1,23 @@
+{% extends "admin/base.html" %}
+{% from "components/buttons.html" import post_button %}
+{% from "components/badges.html" import verified_seller_badge, email_verified_badge %}
+{% block admin %}
+<h1>Usuarios</h1>
+<form class="flex gap-2 my-3" method="get"><input class="input" name="q" value="{{ q }}" placeholder="Buscar por nombre o celular"><button class="btn btn-primary">Buscar</button></form>
+<div class="card divide-y divide-tierra-200">
+  {% for u in users %}
+  <div class="p-3 flex items-center justify-between gap-3 flex-wrap">
+    <div class="min-w-0"><p class="font-bold">{{ u.name }} <span class="badge badge-neutral">{{ u.role }}</span>{% if u.deleted_at %} <span class="badge badge-alquilo">Eliminada por su dueño</span>{% elif not u.is_enabled %} <span class="badge badge-alquilo">Desactivado</span>{% endif %}
+        {% if u.is_verified_seller %} {{ verified_seller_badge() }}{% endif %}{% if u.email_verified %} {{ email_verified_badge() }}{% endif %}</p>
+      <p class="text-sm text-tierra-600">{{ u.phone }} · {{ u.location_text }}</p></div>
+    {% if not u.deleted_at %}
+    <div class="flex gap-2 flex-wrap">
+      {% if u.is_enabled and not u.is_admin %}<a class="btn btn-outline btn-sm" href="{{ url_for('profiles.public', user_id=u.id) }}">Perfil</a>{% endif %}
+      {{ post_button(url_for('admin.toggle_verified', user_id=u.id), 'Quitar insignia' if u.is_verified_seller else 'Dar insignia verificado', 'outline', 'shield') }}
+      {% if u.id != current_user.id %}{{ post_button(url_for('admin.toggle_user', user_id=u.id), 'Activar' if not u.is_enabled else 'Desactivar', 'primary' if not u.is_enabled else 'danger', confirm=None if not u.is_enabled else '¿Desactivar esta cuenta y pausar sus anuncios?') }}{% endif %}
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

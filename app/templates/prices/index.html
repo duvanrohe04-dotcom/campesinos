@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "components/icons.html" import ui, cat_icon %}
+{% from "components/widgets.html" import empty_state %}
+{% block title %}Precios del campo{% if selected %} · {{ selected.name }}{% endif %} · {{ config.SITE_NAME }}{% endblock %}
+{% block description %}Precios de referencia de animales, cosechas e insumos en la provincia de Vélez, calculados con los anuncios de los últimos 30 días.{% endblock %}
+{% block content %}
+<div class="container-page mt-6">
+  <h1>Precios del campo</h1>
+  <p class="text-lg text-tierra-700 mt-2 max-w-2xl">Un punto de partida para fijar o negociar el precio. Se calculan con los anuncios de los últimos 30 días, sin los valores muy raros.</p>
+
+  <nav class="flex gap-2 overflow-x-auto py-4" aria-label="Categorías">
+    <a class="chip no-underline whitespace-nowrap {{ 'chip-active' if not selected }}" href="{{ url_for('prices.index') }}">Todas</a>
+    {% for r in roots %}<a class="chip no-underline whitespace-nowrap {{ 'chip-active' if selected and selected.id == r.id }}" href="{{ url_for('prices.index', cat=r.slug) }}">{{ r.name }}</a>{% endfor %}
+  </nav>
+
+  {% if rows %}
+  <div class="grid gap-3 md:hidden">
+    {% for row in rows %}
+    <a href="{{ url_for('prices.detail', slug=row.category.slug, unidad=row.unit) }}" class="card p-4 no-underline text-tierra-900 flex items-center gap-3">
+      <span class="text-primary-700">{{ cat_icon(row.category.icon, 'w-10 h-10') }}</span>
+      <span class="min-w-0 flex-1"><span class="block font-extrabold">{{ row.category.name }} <span class="font-semibold text-tierra-600">por {{ row.unit }}</span></span>
+        <span class="block text-2xl font-extrabold text-primary-800 leading-tight">{{ row.snapshot.average|cop }}</span>
+        <span class="block text-sm text-tierra-600">De {{ row.snapshot.minimum|cop }} a {{ row.snapshot.maximum|cop }} · {{ row.snapshot.sample_size }} anuncios</span></span>
+      {% if row.change_percent is not none %}<span class="font-extrabold {{ 'text-secondary-700' if row.change_percent > 0 else 'text-primary-700' }}">{{ '▲' if row.change_percent > 0 else ('▼' if row.change_percent < 0 else '•') }} {{ row.change_percent|abs }}%</span>{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+  <div class="card overflow-x-auto hidden md:block">
+    <table class="w-full text-left">
+      <caption class="sr-only">Precios de referencia por categoría y unidad</caption>
+      <thead class="bg-tierra-100 text-sm text-tierra-700"><tr><th scope="col" class="p-3">Producto</th><th scope="col" class="p-3">Unidad</th><th scope="col" class="p-3">Promedio</th><th scope="col" class="p-3">Mínimo – máximo</th><th scope="col" class="p-3">Anuncios</th><th scope="col" class="p-3">Cambio (4 sem.)</th></tr></thead>
+      <tbody class="divide-y divide-tierra-200">
+        {% for row in rows %}
+        <tr>
+          <th scope="row" class="p-3"><a href="{{ url_for('prices.detail', slug=row.category.slug, unidad=row.unit) }}" class="font-extrabold">{{ row.category.name }}</a></th>
+          <td class="p-3">{{ row.unit }}</td><td class="p-3 font-extrabold text-primary-800">{{ row.snapshot.average|cop }}</td>
+          <td class="p-3 text-tierra-700">{{ row.snapshot.minimum|cop }} – {{ row.snapshot.maximum|cop }}</td><td class="p-3">{{ row.snapshot.sample_size }}</td>
+          <td class="p-3 font-bold">{% if row.change_percent is none %}—{% else %}<span class="{{ 'text-secondary-700' if row.change_percent > 0 else 'text-primary-700' }}">{{ '▲' if row.change_percent > 0 else ('▼' if row.change_percent < 0 else '•') }} {{ row.change_percent|abs }}%</span>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="help mt-3">Solo se muestran productos con al menos 3 anuncios recientes. Son precios de referencia: cada negocio se acuerda entre las partes.</p>
+  {% else %}
+  {{ empty_state('Aún no hay suficientes anuncios para calcular precios', 'Cuando haya al menos 3 anuncios parecidos en los últimos 30 días, aparecerá aquí el precio de referencia.', 'Ver anuncios', url_for('listings.index')) }}
+  {% endif %}
+</div>
+{% endblock %}

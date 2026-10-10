@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% from "components/icons.html" import ui %}
+{% block title %}{{ event.title }} · Agenda del campo · {{ config.SITE_NAME }}{% endblock %}
+{% block description %}{{ kinds.get(event.kind, 'Evento') }}: {{ event.title }}, el {{ event.starts_at.strftime('%d/%m/%Y') }}{% if event.place %} en {{ event.place }}{% endif %}{% if event.municipality %} ({{ event.municipality.name }}){% endif %}.{% endblock %}
+{% block head %}
+<meta property="og:type" content="article">
+<meta property="og:title" content="{{ event.title }}">
+<meta property="og:description" content="{{ event.starts_at.strftime('%d/%m/%Y %H:%M') }} · {{ event.place or '' }}">
+{% if event.image %}<meta property="og:image" content="{{ url_for('static', filename='uploads/' ~ event.image, _external=True) }}">{% endif %}
+{% set ld = {"@context": "https://schema.org", "@type": "Event", "name": event.title, "startDate": event.starts_at.isoformat(),
+  "eventStatus": "https://schema.org/EventScheduled", "location": {"@type": "Place", "name": event.place or (event.municipality.name if event.municipality else "Santander"),
+  "address": {"@type": "PostalAddress", "addressLocality": event.municipality.name if event.municipality else "", "addressRegion": "Santander", "addressCountry": "CO"}}} %}
+{% if event.ends_at %}{% set _ = ld.update({"endDate": event.ends_at.isoformat()}) %}{% endif %}
+{% if event.description %}{% set _ = ld.update({"description": event.description[:300]}) %}{% endif %}
+<script type="application/ld+json">{{ ld|tojson }}</script>
+{% endblock %}
+{% block content %}
+<article class="container-page max-w-3xl mt-6">
+  <a class="font-bold" href="{{ url_for('agenda.index') }}">← Agenda del campo</a>
+  {% if event.image %}<img src="{{ url_for('static', filename='uploads/' ~ event.image) }}" alt="" width="1200" height="800" class="mt-3 w-full rounded-2xl object-cover max-h-80">{% endif %}
+  <p class="mt-4"><span class="badge badge-compro">{{ kinds.get(event.kind, event.kind) }}</span></p>
+  <h1 class="mt-2">{{ event.title }}</h1>
+  <dl class="card p-4 mt-4 grid gap-3">
+    <div class="flex gap-3"><dt class="shrink-0 text-primary-700">{{ ui('clock', 'w-6 h-6') }}<span class="sr-only">Fecha y hora</span></dt>
+      <dd class="font-bold">{{ event.starts_at.strftime('%d/%m/%Y') }} a las {{ event.starts_at.strftime('%H:%M') }}{% if event.ends_at %}<span class="font-normal"> hasta el {{ event.ends_at.strftime('%d/%m/%Y %H:%M') }}</span>{% endif %}</dd></div>
+    {% if event.place or event.municipality %}<div class="flex gap-3"><dt class="shrink-0 text-primary-700">{{ ui('pin', 'w-6 h-6') }}<span class="sr-only">Lugar</span></dt>
+      <dd class="font-bold">{{ event.place }}{% if event.municipality %}{{ ', ' if event.place }}{{ event.municipality.name }}{% endif %}</dd></div>{% endif %}
+    {% if event.organizer %}<div class="flex gap-3"><dt class="shrink-0 text-primary-700">{{ ui('user', 'w-6 h-6') }}<span class="sr-only">Organiza</span></dt><dd class="font-bold">Organiza: {{ event.organizer }}</dd></div>{% endif %}
+  </dl>
+  {% if event.description %}<p class="mt-5 text-lg leading-relaxed whitespace-pre-line">{{ event.description }}</p>{% endif %}
+  <div class="flex flex-wrap gap-3 mt-6">
+    <a class="btn btn-primary btn-lg" href="{{ url_for('agenda.calendar_file', event_id=event.id) }}">{{ ui('download', 'w-6 h-6') }}Agregar a mi calendario</a>
+    <a class="btn btn-whatsapp btn-lg" target="_blank" rel="noopener" href="https://wa.me/?text={{ (event.title ~ ' — ' ~ event.starts_at.strftime('%d/%m/%Y %H:%M') ~ ' ' ~ event_url(event, external=True))|urlencode }}">{{ ui('whatsapp', 'w-6 h-6') }}Compartir por WhatsApp</a>
+  </div>
+</article>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "admin/base.html" %}
+{% from "components/forms.html" import wtf_field, wtf_checkbox %}
+{% from "components/buttons.html" import post_button %}
+{% block admin %}
+<h1>{{ 'Editar' if category else 'Nueva' }} {{ 'categoría' if is_root else 'subcategoría' }}{% if parent %} de {{ parent.name }}{% endif %}</h1>
+<form method="post" class="card p-5 mt-4 max-w-lg" novalidate>
+  {{ form.hidden_tag() }}
+  {{ wtf_field(form.name) }}
+  {% if is_root %}
+  {{ wtf_field(form.icon) }}
+  {{ wtf_field(form.price_units, "Ej: kilo, arroba, bulto, a convenir") }}
+  {{ wtf_field(form.home_section) }}
+  {{ wtf_checkbox(form.requires_ica) }}
+  {% endif %}
+  {{ wtf_field(form.position, "Número menor aparece primero", inputmode="numeric") }}
+  {{ wtf_checkbox(form.is_active) }}
+  <button class="btn btn-primary btn-lg w-full">Guardar</button>
+</form>
+{% if category %}<div class="mt-4">{{ post_button(url_for('admin.category_delete', category_id=category.id), 'Eliminar', 'danger', 'trash', confirm='¿Eliminar esta categoría?') }}</div>{% endif %}
+{% endblock %}

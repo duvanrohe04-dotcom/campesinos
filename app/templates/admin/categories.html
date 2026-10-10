@@ -1,0 +1,27 @@
+{% extends "admin/base.html" %}
+{% from "components/buttons.html" import post_button %}
+{% from "components/icons.html" import cat_icon %}
+{% block admin %}
+<div class="flex items-center justify-between gap-3"><h1>Categorías</h1><a class="btn btn-primary" href="{{ url_for('admin.category_new') }}">Nueva categoría</a></div>
+<div class="grid gap-3 mt-4">
+  {% for r in roots %}
+  <div class="card p-4">
+    <div class="flex items-center gap-3 flex-wrap">
+      <span class="text-primary-700">{{ cat_icon(r.icon, 'w-10 h-10') }}</span>
+      <div class="flex-1 min-w-0"><p class="font-extrabold text-lg">{{ r.name }} {% if not r.is_active %}<span class="badge badge-alquilo">Oculta</span>{% endif %}{% if r.requires_ica %} <span class="badge badge-neutral">ICA</span>{% endif %}</p>
+        <p class="text-sm text-tierra-600">Unidades de precio: {{ r.price_units|join(', ') }}</p></div>
+      <div class="flex gap-2 flex-wrap">
+        <a class="btn btn-outline btn-sm" href="{{ url_for('admin.attributes', category_id=r.id) }}">Datos específicos ({{ r.attribute_defs|length }})</a>
+        <a class="btn btn-outline btn-sm" href="{{ url_for('admin.category_edit', category_id=r.id) }}">Editar</a>
+        <a class="btn btn-outline btn-sm" href="{{ url_for('admin.category_new', padre=r.id) }}">+ Subcategoría</a>
+      </div>
+    </div>
+    <ul class="flex flex-wrap gap-2 mt-3">
+      {% for c in r.children %}
+      <li class="chip {{ '' if c.is_active else 'opacity-60' }}"><a class="no-underline text-tierra-800" href="{{ url_for('admin.category_edit', category_id=c.id) }}">{{ c.name }}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+﻿{% extends "base.html" %}
+{% from "components/icons.html" import ui %}
+{% block title %}Preguntas frecuentes · {{ config.SITE_NAME }}{% endblock %}
+{% block description %}Respuestas claras sobre cómo publicar, comprar, renovar anuncios, la guía del ICA y la seguridad en {{ config.SITE_NAME }}.{% endblock %}
+
+{% set faqs = [
+  ('¿Cuesta algo publicar?', 'No. Publicar y buscar es totalmente gratis. No cobramos comisión por las ventas.'),
+  ('¿Puedo comprar y vender con la misma cuenta?', 'Sí. Todas las cuentas pueden publicar lo que venden, lo que alquilan o lo que están buscando («Compro / Busco»), y también contactar a otros. No tienes que elegir entre comprador y vendedor.'),
+  ('¿Necesito una cuenta para ver los anuncios?', 'No. Puedes buscar y ver todo sin registrarte. La cuenta sirve para publicar, guardar favoritos y publicar anuncios de «Compro / Busco».'),
+  ('¿Cómo me contactan los compradores?', 'Por WhatsApp o por llamada, al celular que registraste. Por eso es importante que sea tu número real.'),
+  ('¿Cómo publico mi primer anuncio?', 'Toca «Publicar gratis», elige qué ofreces, completa los datos, agrega fotos y pon el precio y el lugar. Son 4 pasos cortos y puedes volver atrás cuando quieras.'),
+  ('¿Cuánto dura mi anuncio?', 'Dura 30 días. Antes de que venza te avisamos en tu panel y lo renuevas con un solo toque en «Renovar».'),
+  ('¿Qué hago cuando ya vendí?', 'Entra a «Mi panel» y toca «Vendido». Así dejas de recibir mensajes de ese producto.'),
+  ('¿Puedo publicar varios productos parecidos?', 'Sí. En tu panel toca «Duplicar» y cambia solo lo que haga falta.'),
+  ('¿Qué es la guía sanitaria del ICA?', 'Es el documento que se necesita para mover bovinos, equinos y porcinos de un lugar a otro. La plataforma no la tramita: pídela al vendedor o gestiónala con el ICA antes de transportar los animales.'),
+  ('¿Se pueden hacer pagos por la plataforma?', 'No. Aquí solo se conectan compradores y vendedores. El pago y la entrega se acuerdan directamente entre ustedes.'),
+  ('¿Cómo sé si un anuncio es seguro?', 'Mira el animal o el producto en persona, no pagues por adelantado a desconocidos y desconfía de precios demasiado bajos. Si algo te parece raro, usa «Reportar» en el anuncio.'),
+  ('¿Qué hago si me piden dinero antes de ver el producto?', 'No lo envíes. Reporta el anuncio y escríbenos desde «Contacto».'),
+  ('Olvidé mi contraseña, ¿qué hago?', 'Escríbenos desde «Contacto» con tu número de celular y te ayudamos a recuperar tu cuenta.'),
+  ('¿Qué datos míos son públicos?', 'Tu nombre, tu finca, tu municipio y tu celular (para que te contacten) se muestran en tus anuncios. Mira la política de datos personales para más detalles.'),
+] %}
+
+{% block head %}
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{% for q, a in faqs %}{"@type":"Question","name":{{ q|tojson }},"acceptedAnswer":{"@type":"Answer","text":{{ a|tojson }}}}{{ "," if not loop.last }}{% endfor %}]}</script>
+{% endblock %}
+
+{% block content %}
+<div class="container-page max-w-3xl mt-6">
+  <h1>Preguntas frecuentes</h1>
+  <p class="text-tierra-600 mt-2 mb-5">Toca una pregunta para ver la respuesta.</p>
+  <div class="grid gap-3">
+    {% for q, a in faqs %}
+    <details class="card group">
+      <summary class="flex items-center justify-between gap-3 px-4 min-h-[3.5rem] py-2 font-extrabold cursor-pointer list-none">
+        <span>{{ q }}</span>
+        <span class="shrink-0 text-primary-700 transition group-open:rotate-180">{{ ui('down', 'w-6 h-6') }}</span>
+      </summary>
+      <p class="px-4 pb-4 text-tierra-800 text-lg leading-relaxed">{{ a }}</p>
+    </details>
+    {% endfor %}
+  </div>
+  <div class="card p-5 mt-8 text-center">
+    <p class="font-extrabold text-lg">¿No encontraste tu respuesta?</p>
+    <a class="btn btn-primary btn-lg mt-3" href="{{ url_for('main.contact') }}">Escríbenos</a>
+  </div>
+</div>
+{% endblock %}
+

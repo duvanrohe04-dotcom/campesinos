@@ -1,0 +1,38 @@
+[tool.black]
+line-length = 120
+target-version = ["py312"]
+extend-exclude = "/(migrations|node_modules|\\.venv)/"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = ["migrations", "node_modules", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "C4", "SIM"]
+ignore = [
+    "E731",  # lambdas asignadas: se usan en seed_data
+    "B008",  # llamadas en argumentos por defecto (patrón de Flask/WTForms)
+    "C408",  # dict(...) legible en datos de seed
+    "SIM108",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011", "E501"]  # tablas de datos en pruebas con «fmt: skip»
+"app/blueprints/*/__init__.py" = ["E402", "F401"]
+"app/services/seed_articles.py" = ["E501"]  # texto de los artículos iniciales
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/services/seed_data.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true

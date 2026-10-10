@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% from "components/widgets.html" import empty_state %}
+{% block title %}No se puede abrir así · {{ config.SITE_NAME }}{% endblock %}
+{% block content %}
+{{ empty_state('Esa página no se abre así', 'Usa los botones del sitio para llegar ahí. Si querías salir de tu cuenta, hazlo desde el menú.', 'Ir al inicio', url_for('main.home')) }}
+{% endblock %}

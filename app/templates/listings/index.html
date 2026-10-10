@@ -1,0 +1,133 @@
+﻿{% extends "base.html" %}
+{% from "components/icons.html" import ui %}
+{% from "components/cards.html" import listing_card %}
+{% from "components/widgets.html" import empty_state, pagination %}
+{% from "components/forms.html" import village_select %}
+
+{% block title %}{% if info.sub %}{{ info.sub.name }}{% elif info.root %}{{ info.root.name }}{% else %}Anuncios{% endif %}{% if municipality %} en {{ municipality.name }}{% endif %} · {{ config.SITE_NAME }}{% endblock %}
+{% block description %}Anuncios de {% if info.sub %}{{ info.sub.name|lower }}{% elif info.root %}{{ info.root.name|lower }}{% else %}productos del campo, animales e insumos{% endif %}{% if municipality %} en {{ municipality.name }}{% else %} en {{ config.SITE_REGION }}{% endif %}. Contacta directo al vendedor por WhatsApp.{% endblock %}
+
+{% block scripts %}<script src="{{ url_for('static', filename='js/map.js') }}" defer></script>{% endblock %}
+{% block content %}
+<div class="container-page mt-5">
+  <h1 class="!text-2xl lg:!text-3xl">
+    {% if info.sub %}{{ info.sub.name }}{% elif info.root %}{{ info.root.name }}{% else %}Todos los anuncios{% endif %}{% if municipality %} en {{ municipality.name }}{% endif %}
+  </h1>
+  <div class="flex items-center justify-between gap-3 flex-wrap mt-1">
+    <p class="text-tierra-600">{{ page_obj.total }} {{ 'anuncio' if page_obj.total == 1 else 'anuncios' }}</p>
+    <a class="btn btn-outline btn-sm" href="{{ url_for('listings.map_view', **clean_args) }}">{{ ui('pin', 'w-4 h-4') }}Ver en mapa</a>
+  </div>
+
+  <div class="lg:grid lg:grid-cols-[17rem_1fr] lg:gap-6 mt-4">
+    {# ---------- Filtros: desplegable en móvil, barra lateral en escritorio ---------- #}
+    <aside>
+      <details id="filters-panel" class="card lg:sticky lg:top-20">
+        <summary class="flex items-center justify-between gap-2 px-4 min-h-[3.25rem] font-extrabold cursor-pointer list-none lg:cursor-default">
+          <span class="flex items-center gap-2">{{ ui('filter', 'w-5 h-5') }}Filtrar{% if chips %} ({{ chips|length }}){% endif %}</span>
+          <span class="lg:hidden">{{ ui('down', 'w-5 h-5') }}</span>
+        </summary>
+        <form method="get" action="{{ url_for('listings.index') }}" class="px-4 pb-4 grid gap-3">
+          <div><label class="label" for="q">Buscar</label>
+            <input class="input" id="q" name="q" type="search" value="{{ args.get('q', '') }}" placeholder="Ej: novillo, guayaba"></div>
+          <div><label class="label" for="cat">Categoría</label>
+            <select class="input" id="cat" name="cat" data-autosubmit>
+              <option value="">Todas</option>
+              {% for r in roots %}<option value="{{ r.slug }}" {{ 'selected' if info.root and info.root.id == r.id }}>{{ r.name }}</option>{% endfor %}
+            </select></div>
+          {% if info.root %}
+          <div><label class="label" for="sub">Tipo</label>
+            <select class="input" id="sub" name="sub">
+              <option value="">Todos</option>
+              {% for c in info.root.active_children %}<option value="{{ c.slug }}" {{ 'selected' if info.sub and info.sub.id == c.id }}>{{ c.name }}</option>{% endfor %}
+            </select></div>
+          {% endif %}
+          <div><label class="label" for="tipo">Tipo de anuncio</label>
+            <select class="input" id="tipo" name="tipo">
+              <option value="">Todos</option>
+              {% for k, v in AD_TYPES.items() %}<option value="{{ k }}" {{ 'selected' if args.get('tipo') == k }}>{{ v }}</option>{% endfor %}
+            </select></div>
+          <div><label class="label" for="mun">Municipio</label>
+            <select class="input" id="mun" name="mun">
+              <option value="">Todos</option>
+              {% for m in nav_municipalities %}<option value="{{ m.id }}" {{ 'selected' if args.get('mun') == m.id|string }}>{{ m.name }}</option>{% endfor %}
+            </select></div>
+          {% if villages %}
+          <div><label class="label" for="ver">Vereda</label>
+            <select class="input" id="ver" name="ver">
+              <option value="">Todas</option>
+              {% for v in villages %}<option value="{{ v.id }}" {{ 'selected' if args.get('ver') == v.id|string }}>{{ v.name }}</option>{% endfor %}
+            </select></div>
+          {% endif %}
+          <div><span class="label">Cerca de mí</span>
+            <div class="flex flex-wrap gap-2">
+              {% for km in (5, 10, 25) %}<button type="button" class="btn btn-outline btn-sm" data-near-url="{{ url_for('listings.index', **clean_args) }}" data-radius="{{ km }}">{{ km }} km</button>{% endfor %}
+            </div></div>
+          <div><span class="label">Precio (COP)</span>
+            <div class="grid grid-cols-2 gap-2">
+              <input class="input" name="pmin" inputmode="numeric" placeholder="Desde" value="{{ args.get('pmin', '') }}" aria-label="Precio desde">
+              <input class="input" name="pmax" inputmode="numeric" placeholder="Hasta" value="{{ args.get('pmax', '') }}" aria-label="Precio hasta">
+            </div></div>
+
+          {% for d in info.defs %}
+            {% if d.type in ('int', 'decimal', 'age') %}
+            <div><span class="label">{{ d.label }}{% if d.unit %} ({{ d.unit }}){% elif d.type == 'age' %} (meses){% endif %}</span>
+              <div class="grid grid-cols-2 gap-2">
+                <input class="input" name="a_{{ d.key }}_min" inputmode="numeric" placeholder="Mín." value="{{ args.get('a_' ~ d.key ~ '_min', '') }}" aria-label="{{ d.label }} mínimo">
+                <input class="input" name="a_{{ d.key }}_max" inputmode="numeric" placeholder="Máx." value="{{ args.get('a_' ~ d.key ~ '_max', '') }}" aria-label="{{ d.label }} máximo">
+              </div></div>
+            {% elif d.type == 'choice' %}
+            <div><label class="label" for="a_{{ d.key }}">{{ d.label }}</label>
+              <select class="input" id="a_{{ d.key }}" name="a_{{ d.key }}"><option value="">Todos</option>
+                {% for c in d.choices %}<option value="{{ c }}" {{ 'selected' if args.get('a_' ~ d.key) == c }}>{{ c }}</option>{% endfor %}</select></div>
+            {% elif d.type == 'bool' %}
+            <div><label class="label" for="a_{{ d.key }}">{{ d.label }}</label>
+              <select class="input" id="a_{{ d.key }}" name="a_{{ d.key }}"><option value="">Da igual</option>
+                <option value="si" {{ 'selected' if args.get('a_' ~ d.key) == 'si' }}>Sí</option>
+                <option value="no" {{ 'selected' if args.get('a_' ~ d.key) == 'no' }}>No</option></select></div>
+            {% else %}
+            <div><label class="label" for="a_{{ d.key }}">{{ d.label }}</label>
+              <input class="input" id="a_{{ d.key }}" name="a_{{ d.key }}" value="{{ args.get('a_' ~ d.key, '') }}"></div>
+            {% endif %}
+          {% endfor %}
+
+          <div><label class="label" for="orden">Ordenar por</label>
+            <select class="input" id="orden" name="orden">
+              {% for k, (label, _f) in sorts.items() %}<option value="{{ k }}" {{ 'selected' if info.order == k }}>{{ label }}</option>{% endfor %}
+            </select></div>
+          <button class="btn btn-primary btn-lg w-full" type="submit">Ver resultados</button>
+          {% if chips %}<a class="btn btn-ghost w-full" href="{{ url_for('listings.index') }}">Borrar filtros</a>{% endif %}
+        </form>
+      </details>
+    </aside>
+
+    <section aria-label="Resultados" class="mt-4 lg:mt-0">
+      {% if chips %}
+      <div class="mb-3">
+        {% if current_user.is_authenticated %}
+        <form method="post" action="{{ url_for('alerts.save') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="query" value="{{ clean_args|urlencode }}">
+          <button class="btn btn-outline btn-sm" type="submit">{{ ui('bell', 'w-4 h-4') }}Avisarme de anuncios nuevos</button></form>
+        {% else %}
+        <a class="btn btn-outline btn-sm" href="{{ url_for('auth.login', next=request.full_path) }}">{{ ui('bell', 'w-4 h-4') }}Ingresa para recibir avisos de esta búsqueda</a>
+        {% endif %}
+      </div>
+      <ul class="flex flex-wrap gap-2 mb-4" aria-label="Filtros activos">
+        {% for label, remove_url in chips %}
+        <li><a class="chip chip-active no-underline" href="{{ remove_url }}" aria-label="Quitar filtro {{ label }}">{{ label }}{{ ui('x', 'w-4 h-4') }}</a></li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+
+      {% if listings %}
+      <div class="grid grid-cols-2 xl:grid-cols-3 gap-3">
+        {% for l in listings %}{{ listing_card(l) }}{% endfor %}
+      </div>
+      {{ pagination(page_obj, 'listings.index', clean_args) }}
+      {% else %}
+        {{ empty_state('No encontramos anuncios con esos filtros', 'Prueba quitando algún filtro o busca con otra palabra.', 'Ver todos los anuncios', url_for('listings.index')) }}
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}
+

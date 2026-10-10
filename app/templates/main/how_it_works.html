@@ -1,0 +1,56 @@
+﻿{% extends "base.html" %}
+{% from "components/icons.html" import ui, cat_icon %}
+{% block title %}Cómo funciona · {{ config.SITE_NAME }}{% endblock %}
+{% block description %}Aprende en 3 pasos a vender o comprar productos del campo, animales e insumos en {{ config.SITE_NAME }}. Gratis y sin intermediarios.{% endblock %}
+
+{% macro steps(title, subtitle, items, cta_label, cta_href, tone) %}
+<section class="card p-5 lg:p-6" aria-labelledby="h-{{ tone }}">
+  <h2 id="h-{{ tone }}" class="!text-2xl">{{ title }}</h2>
+  <p class="text-tierra-600 mt-1 mb-5">{{ subtitle }}</p>
+  <ol class="grid gap-5">
+    {% for icon, head, text in items %}
+    <li class="flex gap-4">
+      <span class="relative shrink-0 grid place-items-center w-16 h-16 rounded-2xl {{ 'bg-primary-100 text-primary-800' if tone == 'vender' else 'bg-secondary-100 text-secondary-800' }}">
+        {{ ui(icon, 'w-8 h-8') }}
+        <span class="absolute -top-2 -left-2 grid place-items-center w-7 h-7 rounded-full bg-sol-400 text-tierra-900 text-sm font-extrabold">{{ loop.index }}</span>
+      </span>
+      <div><h3 class="!text-lg !font-sans !font-extrabold">{{ head }}</h3><p class="text-tierra-700">{{ text }}</p></div>
+    </li>
+    {% endfor %}
+  </ol>
+  <a class="btn btn-lg {{ 'btn-primary' if tone == 'vender' else 'btn-secondary' }} w-full mt-6" href="{{ cta_href }}">{{ cta_label }}</a>
+</section>
+{% endmacro %}
+
+{% block content %}
+<div class="container-page mt-6">
+  <h1>Así de fácil funciona</h1>
+  <p class="text-lg text-tierra-700 mt-2 max-w-2xl">{{ config.SITE_NAME }} junta al que produce con el que necesita. No cobramos ni intermediamos: tú hablas directo y acuerdas el negocio.</p>
+
+  <div class="grid lg:grid-cols-2 gap-5 mt-6">
+    {{ steps('Si quieres vender', 'Publicar es gratis y toma unos minutos.', [
+      ('user', 'Crea tu cuenta', 'Solo necesitas tu nombre, tu celular (el mismo de WhatsApp) y una contraseña.'),
+      ('camera', 'Publica con fotos', 'Elige qué ofreces, cuéntanos los detalles y toma una foto con el celular. Te vamos guiando paso a paso.'),
+      ('whatsapp', 'Te escriben directo', 'Los compradores te llaman o te escriben por WhatsApp. Tú decides a quién vender y cómo entregar.')],
+      'Publica gratis', url_for('profiles.new_listing'), 'vender') }}
+    {{ steps('Si quieres comprar', 'No necesitas cuenta para buscar.', [
+      ('search', 'Busca lo que necesitas', 'Escribe lo que buscas o entra por categoría: animales, cosechas, insumos, servicios. Filtra por municipio y precio.'),
+      ('eye', 'Mira las fotos y los datos', 'Cada anuncio muestra precio, cantidad, lugar y los datos del producto. Si algo no es claro, pregunta.'),
+      ('whatsapp', 'Escribe al vendedor', 'Toca «Escribir por WhatsApp» o «Llamar». Acuerden precio, lugar y fecha de entrega entre ustedes.')],
+      'Ver anuncios', url_for('listings.index'), 'comprar') }}
+  </div>
+
+  <section class="mt-8 rounded-xl2 bg-sol-100 border-2 border-sol-300 p-5 lg:p-6" aria-labelledby="seguro">
+    <h2 id="seguro" class="!text-xl flex items-center gap-2">{{ ui('shield', 'w-7 h-7 text-primary-700') }}Para negociar con tranquilidad</h2>
+    <ul class="mt-3 grid gap-2 text-tierra-800 list-disc pl-5">
+      <li><strong>Mira el animal o el producto en persona</strong> antes de cerrar el negocio.</li>
+      <li><strong>No pagues por adelantado</strong> a alguien que no conoces. Paga cuando recibas.</li>
+      <li>Para mover <strong>bovinos, equinos y porcinos</strong> pide la <strong>guía sanitaria de movilización del ICA</strong>. La plataforma no la gestiona.</li>
+      <li>Si algo te parece raro, toca <strong>«Reportar»</strong> en el anuncio y lo revisamos.</li>
+    </ul>
+  </section>
+
+  <p class="text-center mt-8">¿Te quedó alguna duda? Mira las <a class="font-bold" href="{{ url_for('main.faq') }}">preguntas frecuentes</a> o <a class="font-bold" href="{{ url_for('main.contact') }}">escríbenos</a>.</p>
+</div>
+{% endblock %}
+

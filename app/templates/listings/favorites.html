@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% from "components/cards.html" import listing_card %}
+{% from "components/widgets.html" import empty_state %}
+{% block title %}Mis favoritos · {{ config.SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="container-page mt-6">
+  <h1>Mis favoritos</h1>
+  {% if listings %}
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">{% for l in listings %}{{ listing_card(l) }}{% endfor %}</div>
+  {% else %}
+  {{ empty_state('Aún no tienes favoritos', 'Toca «Guardar en favoritos» en los anuncios que te gusten para encontrarlos fácil.', 'Ver anuncios', url_for('listings.index')) }}
+  {% endif %}
+</div>
+{% endblock %}

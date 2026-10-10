@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% from "components/icons.html" import ui %}
+{% from "components/cards.html" import listing_card, avatar %}
+{% from "components/badges.html" import verified_seller_badge, email_verified_badge, stars %}
+{% from "components/widgets.html" import empty_state %}
+{% block title %}{{ seller.farm_name or seller.name }}{% if seller.municipality %} · {{ seller.municipality.name }}{% endif %} · {{ config.SITE_NAME }}{% endblock %}
+{% block description %}{{ seller.farm_name or seller.name }}{% if seller.municipality %} en {{ seller.municipality.name }}, Santander{% endif %}: {{ listings|length }} anuncios activos de productos del campo, animales e insumos.{% endblock %}
+{% block head %}
+{% set ld = {"@context": "https://schema.org", "@type": "LocalBusiness", "name": seller.farm_name or seller.name,
+  "address": {"@type": "PostalAddress", "addressLocality": seller.municipality.name if seller.municipality else "", "addressRegion": "Santander", "addressCountry": "CO"},
+  "url": url_for('profiles.public', user_id=seller.id, _external=True)} %}
+{% if reputation.count %}{% set _ = ld.update({"aggregateRating": {"@type": "AggregateRating", "ratingValue": reputation.average, "reviewCount": reputation.count}}) %}{% endif %}
+<script type="application/ld+json">{{ ld|tojson }}</script>
+{% endblock %}
+{% block content %}
+<div class="container-page mt-6">
+  <section class="card p-5 flex items-start gap-4">
+    {{ avatar(seller, "w-20 h-20", "text-3xl") }}
+    <div class="min-w-0">
+      <h1 class="!text-2xl">{{ seller.farm_name or seller.name }}</h1>
+      {% if seller.farm_name %}<p class="font-bold">{{ seller.name }}</p>{% endif %}
+      <p class="text-tierra-600 flex items-center gap-1">{{ ui('pin', 'w-4 h-4') }}{{ seller.location_text }}</p>
+      <p class="mt-1 flex items-center gap-1 font-extrabold">{{ ui('phone', 'w-5 h-5') }}<span class="sr-only">Celular:</span>{{ seller.phone|mask_phone }}
+        <a class="ml-1 text-sm" rel="nofollow" href="{{ url_for('profiles.seller_contact', user_id=seller.id) }}">Ver celular</a></p>
+      <div class="flex flex-wrap gap-1 mt-2">
+        {% if seller.is_verified_seller %}{{ verified_seller_badge() }}{% endif %}
+        {% if seller.email_verified %}{{ email_verified_badge() }}{% endif %}
+      </div>
+    </div>
+  </section>
+
+  {# Reputación: tiempo en la plataforma, ventas y calificación #}
+  <dl class="grid grid-cols-3 gap-2 mt-3 text-center">
+    <div class="card p-3"><dt class="text-xs font-bold text-tierra-600">En la plataforma desde</dt><dd class="font-extrabold">{{ reputation.member_since }}</dd></div>
+    <div class="card p-3"><dt class="text-xs font-bold text-tierra-600">Ventas</dt><dd class="font-extrabold">{{ reputation.sold }}</dd></div>
+    <div class="card p-3"><dt class="text-xs font-bold text-tierra-600">Calificación</dt>
+      <dd class="font-extrabold">{% if reputation.count %}{{ reputation.average }} ★ <span class="text-xs font-semibold text-tierra-600">({{ reputation.count }})</span>{% else %}Sin calificar{% endif %}</dd></div>
+  </dl>
+
+  {% if seller.bio %}<p class="mt-4 text-lg">{{ seller.bio }}</p>{% endif %}
+
+  <h2 class="!text-2xl mt-8 mb-4">Anuncios activos ({{ listings|length }})</h2>
+  {% if listings %}
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">{% for l in listings %}{{ listing_card(l) }}{% endfor %}</div>
+  {% else %}{{ empty_state('Sin anuncios activos por ahora', 'Vuelve pronto: este vendedor publicará más cosas.') }}{% endif %}
+
+  {# Calificaciones #}
+  <section id="calificaciones" class="mt-10" aria-labelledby="cal">
+    <h2 id="cal" class="!text-2xl mb-3">Calificaciones</h2>
+    {% if reputation.count %}
+    <p class="flex items-center gap-2 mb-3">{{ stars(reputation.average, 'w-6 h-6') }}<span class="font-extrabold text-xl">{{ reputation.average }}</span><span class="text-tierra-600">de {{ reputation.count }} {{ 'opinión' if reputation.count == 1 else 'opiniones' }}</span></p>
+    <ul class="grid gap-3">
+      {% for r in reviews %}
+      <li class="card p-4"><div class="flex items-center justify-between gap-2"><p class="font-bold">{{ r.rater.name.split()[0] }}</p>{{ stars(r.stars, 'w-4 h-4') }}</div>
+        {% if r.comment %}<p class="mt-1">{{ r.comment }}</p>{% endif %}<p class="text-xs text-tierra-600 mt-1">{{ r.created_at|timeago }}</p></li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="text-tierra-600">Todavía no tiene calificaciones.</p>{% endif %}
+
+    {% if current_user.is_authenticated and current_user.id != seller.id and not seller.is_admin %}
+    <form method="post" action="{{ url_for('profiles.rate_seller', user_id=seller.id) }}" class="card p-5 mt-5" novalidate>
+      {{ rating_form.hidden_tag() }}
+      <h3 class="!text-lg !font-sans !font-extrabold mb-2">{{ 'Cambiar mi calificación' if own_rating else 'Califica a este vendedor' }}</h3>
+      <fieldset class="mb-3"><legend class="sr-only">{{ rating_form.stars.label.text }}</legend>
+        <div class="grid grid-cols-5 gap-2">
+          {% for option in rating_form.stars %}
+          <label class="pick"><input type="radio" name="stars" value="{{ option.data }}" {{ 'checked' if rating_form.stars.data == option.data }}>
+            <span class="pick-body !min-h-[3.5rem] !p-1"><span class="text-xl font-extrabold">{{ option.data }}</span><span class="text-sol-500">{{ ui('star-fill', 'w-4 h-4') }}</span></span></label>
+          {% endfor %}
+        </div></fieldset>
+      {{ rating_form.comment(class_="input mb-3", rows=3, maxlength=300, placeholder="Cuéntanos tu experiencia (opcional)") }}
+      <button class="btn btn-primary btn-lg w-full" type="submit">Enviar calificación</button>
+    </form>
+    {% elif not current_user.is_authenticated %}
+    <a class="btn btn-outline mt-4" href="{{ url_for('auth.login', next=url_for('profiles.public', user_id=seller.id)) }}">Ingresa para calificar</a>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
+

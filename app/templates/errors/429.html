@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% from "components/widgets.html" import empty_state %}
+{% block title %}Demasiados intentos · {{ config.SITE_NAME }}{% endblock %}
+{% block content %}
+{{ empty_state('Vas muy rápido', 'Hiciste muchas peticiones en poco tiempo. Espera un momento e inténtalo de nuevo.', 'Ir al inicio', url_for('main.home')) }}
+{% endblock %}

@@ -1,2 +1,7 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+# Los scripts que corren dentro de Linux (Docker/Coolify) deben quedar siempre con saltos de línea LF,
+# aunque se editen en Windows; con CRLF fallan con «/bin/sh^M: bad interpreter».
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.conf.py text eol=lf

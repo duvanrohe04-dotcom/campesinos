@@ -1,0 +1,21 @@
+{% extends "admin/base.html" %}
+{% from "components/forms.html" import wtf_field, wtf_checkbox %}
+{% block admin %}
+<h1>{{ 'Editar' if attr else 'Nuevo' }} dato · {{ category.name }}</h1>
+<form method="post" class="card p-5 mt-4 max-w-lg" novalidate>
+  {{ form.hidden_tag() }}
+  {{ wtf_field(form.label, "Ej: Raza") }}
+  {% if not attr %}{{ wtf_field(form.key, "Sin tildes ni espacios. Si lo dejas vacío se crea del nombre.") }}{% endif %}
+  {{ wtf_field(form.type) }}
+  {{ wtf_field(form.choices, "Separadas por coma. Ej: Macho, Hembra") }}
+  {{ wtf_field(form.unit, "Ej: kg, m, semanas") }}
+  <div class="grid grid-cols-2 gap-3">{{ wtf_field(form.min_value) }}{{ wtf_field(form.max_value) }}</div>
+  {{ wtf_field(form.help_text, "Ej: Cebú, Holstein") }}
+  {{ wtf_field(form.position, inputmode="numeric") }}
+  {{ wtf_checkbox(form.required) }}
+  {{ wtf_checkbox(form.is_filterable) }}
+  {% if attr %}{{ wtf_checkbox(form.is_active) }}{% endif %}
+  <button class="btn btn-primary btn-lg w-full mt-2">Guardar</button>
+</form>
+<a class="btn btn-ghost mt-4" href="{{ url_for('admin.attributes', category_id=category.id) }}">← Volver</a>
+{% endblock %}

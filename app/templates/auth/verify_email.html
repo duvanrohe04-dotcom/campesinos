@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% from "components/forms.html" import wtf_field %}
+{% from "components/icons.html" import ui %}
+{% from "components/widgets.html" import help_link %}
+{% block title %}Verificar mi correo · {{ config.SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="container-page max-w-md mt-6">
+  <h1>Verifica tu correo</h1>
+  <p class="text-lg text-tierra-700 mt-2 mb-5">Así puedes recuperar tu cuenta si olvidas la contraseña, y los compradores confían más en ti.</p>
+
+  <section class="card p-5 mb-4" aria-labelledby="paso1">
+    <h2 id="paso1" class="!text-lg !font-sans !font-extrabold">1. Pide tu código</h2>
+    <p class="text-tierra-700 mt-1 mb-3">Te lo enviamos a <strong>{{ current_user.email }}</strong>. ¿Está mal? <a href="{{ url_for('profiles.edit_profile') }}">Cámbialo aquí</a>.</p>
+    <form method="post" action="{{ url_for('auth.send_verification_code') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-outline btn-lg w-full" type="submit">{{ ui('info', 'w-6 h-6') }}Enviarme el código</button>
+    </form>
+    {% if wait %}<p class="help mt-2">Podrás pedir otro en {{ wait }} segundos.</p>{% endif %}
+    <p class="help mt-2">Si no lo ves, revisa la carpeta de spam o correo no deseado.</p>
+  </section>
+
+  <section class="card p-5" aria-labelledby="paso2">
+    <h2 id="paso2" class="!text-lg !font-sans !font-extrabold mb-2">2. Escribe el código</h2>
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {{ wtf_field(form.code, "Son 6 números. El código dura 10 minutos.", "123456", "numeric", "one-time-code") }}
+      <button class="btn btn-primary btn-lg w-full" type="submit">{{ ui('check', 'w-6 h-6') }}Verificar</button>
+    </form>
+  </section>
+  <a class="btn btn-ghost w-full mt-4" href="{{ url_for('profiles.panel') }}">Ahora no</a>
+  <div class="mt-2">{{ help_link() }}</div>
+</div>
+{% endblock %}

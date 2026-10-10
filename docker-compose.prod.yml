@@ -1,0 +1,120 @@
+# Producción en un VPS: Nginx (HTTPS) → Gunicorn (Flask) → PostgreSQL.
+# Uso: docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+# Primera vez: ejecuta ./deploy/init-letsencrypt.sh (ver DEPLOY.md).
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"   # rotación de logs de Docker
+    max-file: "5"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-campo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?define POSTGRES_PASSWORD en .env}
+      POSTGRES_DB: ${POSTGRES_DB:-campo}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-campo} -d ${POSTGRES_DB:-campo}"]
+      interval: 10s
+      retries: 10
+    logging: *logging
+
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      FLASK_ENV: production
+      RUN_SCHEDULER: "false"  # aquí las tareas programadas corren en el servicio «scheduler»
+      DATABASE_URL: postgresql://${POSTGRES_USER:-campo}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-campo}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - uploads:/srv/app/static/uploads
+      - applogs:/srv/instance/logs
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=4)"]
+      interval: 30s
+      timeout: 6s
+      retries: 3
+    logging: *logging
+
+  # Vence anuncios y revisa búsquedas guardadas (reemplaza al cron del servidor)
+  scheduler:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      FLASK_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-campo}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-campo}
+    depends_on:
+      app:
+        condition: service_healthy
+    entrypoint: []
+    command: ["sh", "/srv/deploy/scheduler.sh"]
+    volumes:
+      - ./deploy:/srv/deploy:ro
+      - applogs:/srv/instance/logs
+    logging: *logging
+
+  nginx:
+    build:
+      context: .
+      dockerfile: deploy/nginx/Dockerfile
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:?define DOMAIN en .env}
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - uploads:/usr/share/nginx/static/uploads:ro
+      - certbot_www:/var/www/certbot:ro
+      - letsencrypt:/etc/letsencrypt:ro
+    logging: *logging
+
+  certbot:
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    entrypoint: /bin/sh -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done"
+    volumes:
+      - certbot_www:/var/www/certbot
+      - letsencrypt:/etc/letsencrypt
+    logging: *logging
+
+  # Copia diaria de la base de datos y de las fotos (ver DEPLOY.md para restaurar)
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER:-campo}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB:-campo}
+      BACKUP_HOUR: ${BACKUP_HOUR:-3}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: []
+    command: ["sh", "/deploy/backup.sh"]
+    volumes:
+      - ./deploy:/deploy:ro
+      - uploads:/data/uploads:ro
+      - ./backups:/backups
+    logging: *logging
+
+volumes:
+  pgdata:
+  uploads:
+  applogs:
+  certbot_www:
+  letsencrypt:

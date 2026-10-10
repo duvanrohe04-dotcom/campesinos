@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "components/icons.html" import ui %}
+{% from "components/widgets.html" import empty_state %}
+{% block title %}Notificaciones · {{ config.SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="container-page max-w-2xl mt-6">
+  <div class="flex items-center justify-between gap-3 flex-wrap">
+    <h1>Notificaciones</h1>
+    <div class="flex gap-2">
+      <a class="btn btn-outline btn-sm" href="{{ url_for('alerts.saved') }}">Mis búsquedas</a>
+      {% if unread_notifications %}
+      <form method="post" action="{{ url_for('alerts.read_all') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-ghost btn-sm" type="submit">Marcar todas como leídas</button></form>
+      {% endif %}
+    </div>
+  </div>
+  {% if items %}
+  <ul class="grid gap-2 mt-4">
+    {% for n in items %}
+    <li>
+      <a href="{{ url_for('alerts.open_notification', notification_id=n.id) }}"
+         class="card p-4 flex gap-3 no-underline text-tierra-900 {{ 'border-primary-600 bg-primary-50' if n.is_unread }}">
+        <span class="grid place-items-center w-11 h-11 shrink-0 rounded-xl bg-primary-100 text-primary-800">{{ ui('bell', 'w-6 h-6') }}</span>
+        <span class="min-w-0"><span class="block font-extrabold">{{ n.title }}{% if n.is_unread %} <span class="badge badge-compro">Nuevo</span>{% endif %}</span>
+          {% if n.body %}<span class="block text-tierra-700">{{ n.body }}</span>{% endif %}
+          <span class="block text-xs text-tierra-600 mt-1">{{ n.created_at|timeago }}</span></span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  {{ empty_state('No tienes notificaciones', 'Guarda una búsqueda y te avisamos aquí cuando haya anuncios nuevos.', 'Buscar anuncios', url_for('listings.index')) }}
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "admin/base.html" %}
+{% from "components/buttons.html" import post_button %}
+{% block admin %}
+<div class="flex items-center justify-between gap-3 flex-wrap"><h1>Agenda del campo</h1><a class="btn btn-primary" href="{{ url_for('admin.event_new') }}">Nuevo evento</a></div>
+<div class="card divide-y divide-tierra-200 mt-4">
+  {% for e in events %}
+  <div class="p-3 flex items-center justify-between gap-3 flex-wrap">
+    <div class="min-w-0"><p class="font-bold">{{ e.title }} <span class="badge badge-neutral">{{ kinds.get(e.kind, e.kind) }}</span>{% if not e.is_published %} <span class="badge badge-alquilo">Oculto</span>{% endif %}</p>
+      <p class="text-sm text-tierra-600">{{ e.starts_at.strftime('%d/%m/%Y %H:%M') }} · {{ e.place or 'Sin lugar' }}</p></div>
+    <div class="flex gap-2"><a class="btn btn-outline btn-sm" href="{{ url_for('admin.event_edit', event_id=e.id) }}">Editar</a>
+      {{ post_button(url_for('admin.event_delete', event_id=e.id), 'Eliminar', 'danger', 'trash', confirm='¿Eliminar este evento?') }}</div>
+  </div>
+  {% else %}<p class="p-4 text-tierra-600">Aún no hay eventos. Crea el primero.</p>{% endfor %}
+</div>
+{% endblock %}

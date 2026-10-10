@@ -1,0 +1,4 @@
+-r base.txt
+gunicorn>=22.0
+psycopg2-binary>=2.9
+redis>=5.0  # opcional: solo si RATELIMIT_STORAGE_URI apunta a Redis (límites compartidos entre procesos)

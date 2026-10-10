@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "components/icons.html" import ui, cat_icon %}
+{% block title %}Quiénes somos · {{ config.SITE_NAME }}{% endblock %}
+{% block description %}{{ config.SITE_NAME }} conecta a campesinos y compradores de {{ config.SITE_REGION }}, sin intermediarios ni comisiones.{% endblock %}
+{% block content %}
+<div class="container-page max-w-3xl mt-6">
+  <h1>Quiénes somos</h1>
+  <p class="text-xl text-tierra-800 mt-3 leading-relaxed">{{ config.SITE_NAME }} nació para que el trabajo del campo llegue directo a quien lo necesita, sin tantos intermediarios de por medio.</p>
+
+  <div class="grid sm:grid-cols-3 gap-3 mt-6">
+    {% for icon, head, text in (('fruta', 'Del campo a tu mesa', 'Cosechas, leche, huevos, miel y productos hechos en finca.'),
+                                ('vaca', 'Animales y más', 'Ganado, caballos, cerdos, aves, insumos, maquinaria y servicios.'),
+                                ('sombrero', 'Para la gente del campo', 'Pensada para usarse fácil desde cualquier celular.')) %}
+    <div class="card p-4 text-center"><span class="text-primary-700 inline-block">{{ cat_icon(icon, 'w-14 h-14') }}</span>
+      <p class="font-extrabold mt-1">{{ head }}</p><p class="text-sm text-tierra-700">{{ text }}</p></div>
+    {% endfor %}
+  </div>
+
+  <h2 class="mt-8 mb-2">Lo que creemos</h2>
+  <ul class="grid gap-2 text-lg text-tierra-800 list-disc pl-5">
+    <li><strong>Gratis y sin comisión.</strong> Publicas sin costo y te quedas con todo lo que vendes.</li>
+    <li><strong>Directo.</strong> Compradores y vendedores hablan por WhatsApp o llamada, sin intermediarios.</li>
+    <li><strong>Sencillo.</strong> Letras grandes, pocos pasos y ayudas claras en cada pantalla.</li>
+    <li><strong>Seguro y responsable.</strong> Revisamos los reportes y recordamos la guía sanitaria del ICA para mover animales.</li>
+  </ul>
+
+  <h2 class="mt-8 mb-2">Dónde estamos</h2>
+  <p class="text-lg text-tierra-800">Empezamos en {{ config.SITE_REGION }}, con la idea de crecer a otras regiones de Colombia.</p>
+
+  <div class="flex flex-wrap gap-3 mt-8">
+    <a class="btn btn-primary btn-lg" href="{{ url_for('main.how_it_works') }}">Ver cómo funciona</a>
+    <a class="btn btn-outline btn-lg" href="{{ url_for('main.contact') }}">Contáctanos</a>
+  </div>
+</div>
+{% endblock %}

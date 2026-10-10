@@ -1,0 +1,18 @@
+{% extends "admin/base.html" %}
+{% from "components/buttons.html" import post_button %}
+{% block admin %}
+<div class="flex items-center justify-between gap-3 flex-wrap"><h1>Datos específicos: {{ category.name }}</h1>
+  <a class="btn btn-primary" href="{{ url_for('admin.attribute_new', category_id=category.id) }}">Nuevo dato</a></div>
+<p class="text-tierra-600 mt-1">Aparecen en el formulario de publicar y se heredan en todas sus subcategorías.</p>
+<div class="card divide-y divide-tierra-200 mt-4">
+  {% for a in category.attribute_defs %}
+  <div class="p-3 flex items-center justify-between gap-3 flex-wrap">
+    <div><p class="font-bold">{{ a.label }} <span class="text-sm font-normal text-tierra-600">({{ a.key }} · {{ a.type }}{% if a.unit %} · {{ a.unit }}{% endif %})</span></p>
+      <p class="text-sm">{% if a.required %}<span class="badge badge-compro">Obligatorio</span>{% endif %}{% if a.is_filterable %} <span class="badge badge-vendo">Filtro</span>{% endif %}{% if not a.is_active %} <span class="badge badge-alquilo">Oculto</span>{% endif %}</p></div>
+    <div class="flex gap-2"><a class="btn btn-outline btn-sm" href="{{ url_for('admin.attribute_edit', attr_id=a.id) }}">Editar</a>
+      {{ post_button(url_for('admin.attribute_delete', attr_id=a.id), 'Eliminar', 'danger', confirm='¿Eliminar este dato?') }}</div>
+  </div>
+  {% else %}<p class="p-4 text-tierra-600">Esta categoría no tiene datos específicos.</p>{% endfor %}
+</div>
+<a class="btn btn-ghost mt-4" href="{{ url_for('admin.categories') }}">← Volver</a>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "components/forms.html" import wtf_field %}
+{% block title %}Ingresar · {{ config.SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="container-page max-w-md mt-8">
+  <h1>Ingresar</h1>
+  <p class="text-tierra-600 mt-1 mb-5">Usa tu celular y tu contraseña.</p>
+  <form method="post" class="card p-5" novalidate>
+    {{ form.hidden_tag() }}
+    {{ wtf_field(form.phone, ph="3101234567", inputmode="numeric", autocomplete="tel") }}
+    {{ wtf_field(form.password, autocomplete="current-password") }}
+    <label class="flex items-center gap-3 mb-5 text-base font-semibold">{{ form.remember(class_="w-6 h-6 accent-primary-700") }} {{ form.remember.label.text }}</label>
+    <button class="btn btn-primary btn-lg w-full" type="submit">Ingresar</button>
+  </form>
+  <p class="text-center mt-5"><a class="font-bold" href="{{ url_for('auth.forgot_password') }}">¿Olvidaste tu contraseña?</a></p>
+  <p class="text-center mt-3">¿Primera vez? <a class="font-bold" href="{{ url_for('auth.register') }}">Crea tu cuenta gratis</a></p>
+</div>
+{% endblock %}

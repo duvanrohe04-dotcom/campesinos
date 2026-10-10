@@ -1,0 +1,21 @@
+{% extends "admin/base.html" %}
+{% from "components/cards.html" import stat %}
+{% from "components/badges.html" import status_badge %}
+{% block admin %}
+<h1>Panel de administración</h1>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
+  {{ stat('Usuarios', counts.users, 'user') }}
+  {{ stat('Anuncios activos', counts.listings, 'tag') }}
+  {{ stat('Reportes abiertos', counts.reports, 'flag') }}
+  {{ stat('Mensajes nuevos', counts.messages, 'info') }}
+</div>
+<h2 class="!text-xl mt-6 mb-2">Últimos anuncios</h2>
+<div class="card divide-y divide-tierra-200">
+  {% for l in latest %}
+  <div class="p-3 flex items-center justify-between gap-3">
+    <div class="min-w-0"><a class="font-bold block truncate" href="{{ listing_url(l) }}">{{ l.title }}</a>
+      <span class="text-sm text-tierra-600">{{ l.user.name }} · {{ l.created_at|timeago }}</span></div>{{ status_badge(l.status) }}
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

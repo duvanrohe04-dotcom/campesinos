@@ -1,0 +1,32 @@
+{% extends "admin/base.html" %}
+{% from "components/forms.html" import wtf_field, wtf_checkbox %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/trix@2.1.1/dist/trix.css">
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/trix@2.1.1/dist/trix.umd.min.js" defer></script>
+<script src="{{ url_for('static', filename='js/trix-setup.js') }}" defer></script>
+{% endblock %}
+{% block admin %}
+<h1>{{ 'Editar' if article else 'Nuevo' }} artículo</h1>
+<form method="post" enctype="multipart/form-data" class="card p-5 mt-4 max-w-3xl" novalidate>
+  {{ form.hidden_tag() }}
+  {{ wtf_field(form.title, "Ej: Cómo tomar buenas fotos de tus animales") }}
+  {{ wtf_field(form.category) }}
+  <div class="mb-4"><label class="label" for="summary">{{ form.summary.label.text }}</label>{{ form.summary(class_="input", rows=3, maxlength=300) }}
+    {% for e in form.summary.errors %}<p class="error-text">{{ e }}</p>{% endfor %}</div>
+  <div class="mb-4">
+    <label class="label" for="body-editor">{{ form.body.label.text }}</label>
+    <input type="hidden" id="body" name="body" value="{{ form.body.data or '' }}">
+    <trix-editor id="body-editor" input="body" class="trix-content input !p-3 min-h-[16rem]" aria-label="Contenido del artículo"></trix-editor>
+    <p class="help">Se guarda con formato seguro: títulos, negrita, listas, citas y enlaces. Las imágenes dentro del texto no están permitidas; usa la portada.</p>
+    {% for e in form.body.errors %}<p class="error-text">{{ e }}</p>{% endfor %}
+  </div>
+  <div class="mb-4"><label class="label" for="cover">{{ form.cover.label.text }}</label>
+    <input class="input !py-2" type="file" id="cover" name="cover" accept="image/*">
+    {% if article and article.cover %}<img src="{{ url_for('static', filename='uploads/' ~ article.cover_thumb) }}" alt="" class="mt-2 h-20 rounded-lg">{{ wtf_checkbox(form.remove_cover) }}{% endif %}</div>
+  {{ wtf_checkbox(form.is_published) }}
+  <button class="btn btn-primary btn-lg w-full">Guardar</button>
+</form>
+<a class="btn btn-ghost mt-4" href="{{ url_for('admin.articles') }}">← Volver</a>
+{% endblock %}

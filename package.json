@@ -1,0 +1,27 @@
+﻿{
+    "name":  "campo-directo",
+    "version":  "1.0.0",
+    "description":  "",
+    "main":  "index.js",
+    "scripts":  {
+                    "watch:css":  "tailwindcss -c tailwind.config.js -i app/static/src/input.css -o app/static/css/app.css --watch",
+                    "build:css":  "tailwindcss -c tailwind.config.js -i app/static/src/input.css -o app/static/css/app.css --minify"
+                },
+    "repository":  {
+                       "type":  "git",
+                       "url":  "git+https://github.com/duvanrohe04-dotcom/campesinos.git"
+                   },
+    "keywords":  [
+
+                 ],
+    "author":  "",
+    "license":  "ISC",
+    "type":  "commonjs",
+    "bugs":  {
+                 "url":  "https://github.com/duvanrohe04-dotcom/campesinos/issues"
+             },
+    "homepage":  "https://github.com/duvanrohe04-dotcom/campesinos#readme",
+    "devDependencies":  {
+                            "tailwindcss":  "3.4"
+                        }
+}

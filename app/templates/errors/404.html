@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% from "components/widgets.html" import empty_state %}
+{% block title %}No encontrado · {{ config.SITE_NAME }}{% endblock %}
+{% block content %}
+{{ empty_state('No encontramos esa página', 'Puede que el anuncio ya no esté disponible o que el enlace tenga un error.', 'Ir al inicio', url_for('main.home')) }}
+{% endblock %}

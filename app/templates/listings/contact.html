@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "components/icons.html" import ui %}
+{% from "components/cards.html" import avatar %}
+{% from "components/buttons.html" import whatsapp_button, call_button %}
+{% block title %}Celular de {{ seller.name }} · {{ config.SITE_NAME }}{% endblock %}
+{% block head %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+{% block content %}
+<div class="container-page max-w-md mt-6">
+  <a class="inline-flex items-center gap-1 font-bold mb-3" href="{{ back_url }}">← Volver{% if listing %} al anuncio{% endif %}</a>
+  <section class="card p-5 text-center" aria-labelledby="contacto">
+    <div class="flex justify-center">{{ avatar(seller, "w-20 h-20", "text-3xl") }}</div>
+    <h1 id="contacto" class="!text-2xl mt-3">{{ seller.farm_name or seller.name }}</h1>
+    {% if listing %}<p class="text-tierra-700 mt-1">{{ listing.title }}</p>{% endif %}
+    <p class="mt-4 text-sm font-bold text-tierra-600">Celular</p>
+    <p class="text-4xl font-extrabold tracking-wide text-primary-800" id="celular">{{ seller.phone|phone }}</p>
+    <div class="grid gap-3 mt-5">
+      <a href="tel:+57{{ seller.phone }}" class="btn btn-lg btn-call w-full" rel="nofollow">{{ ui('phone', 'w-6 h-6') }}Llamar ahora</a>
+      {{ whatsapp_button(wa_link) }}
+    </div>
+  </section>
+  <p class="alert alert-info mt-4" role="note">{{ ui('shield', 'w-6 h-6 shrink-0') }}<span>Antes de pagar o enviar dinero, ve el producto en persona.
+    <a href="{{ url_for('main.safety_tips') }}">Consejos para comprar seguro</a></span></p>
+</div>
+{% endblock %}

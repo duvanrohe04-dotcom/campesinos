@@ -1,0 +1,40 @@
+{% extends "admin/base.html" %}
+{% from "components/forms.html" import wtf_field %}
+{% from "components/buttons.html" import post_button %}
+{% block admin %}
+<h1>{{ mun.name }}</h1>
+
+<section class="card p-4 mt-4" aria-labelledby="centro">
+  <h2 id="centro" class="!text-lg !font-sans !font-extrabold">Centro aproximado en el mapa</h2>
+  <p class="help mb-2">Se usa para centrar el mapa y para «cerca de mí» cuando un anuncio no tiene punto propio. Déjalo vacío para quitarlo.</p>
+  <form method="post" action="{{ url_for('admin.municipality_location', mun_id=mun.id) }}" class="flex gap-2 items-end flex-wrap">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div><label class="label" for="mun-lat">Latitud</label><input class="input" id="mun-lat" name="lat" inputmode="decimal" value="{{ mun.lat if mun.lat is not none else '' }}" placeholder="6.0139"></div>
+    <div><label class="label" for="mun-lng">Longitud</label><input class="input" id="mun-lng" name="lng" inputmode="decimal" value="{{ mun.lng if mun.lng is not none else '' }}" placeholder="-73.6736"></div>
+    <button class="btn btn-primary">Guardar</button>
+  </form>
+</section>
+
+<form method="post" class="card p-4 mt-4 flex gap-2 items-end" novalidate>
+  {{ form.hidden_tag() }}
+  <div class="flex-1">{{ wtf_field(form.name) }}</div>
+  <button class="btn btn-primary mb-4">Agregar vereda</button>
+</form>
+<div class="card divide-y divide-tierra-200 mt-4">
+  {% for v in mun.villages %}
+  <div class="p-3 flex items-center justify-between gap-2 flex-wrap">
+    <span class="font-bold">{{ v.name }}{% if v.lat is not none %} <span class="text-sm font-normal text-tierra-600">({{ v.lat }}, {{ v.lng }})</span>{% endif %}</span>
+    <div class="flex gap-2 items-center flex-wrap">
+      <form method="post" action="{{ url_for('admin.village_location', village_id=v.id) }}" class="flex gap-1 items-center">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input class="input !min-h-[2.5rem] !w-28 text-sm" name="lat" aria-label="Latitud de {{ v.name }}" inputmode="decimal" placeholder="Lat" value="{{ v.lat if v.lat is not none else '' }}">
+        <input class="input !min-h-[2.5rem] !w-28 text-sm" name="lng" aria-label="Longitud de {{ v.name }}" inputmode="decimal" placeholder="Lng" value="{{ v.lng if v.lng is not none else '' }}">
+        <button class="btn btn-outline btn-sm">Guardar</button>
+      </form>
+      {{ post_button(url_for('admin.village_delete', village_id=v.id), 'Eliminar', 'danger', confirm='¿Eliminar esta vereda?') }}
+    </div>
+  </div>
+  {% else %}<p class="p-4 text-tierra-600">Sin veredas todavía.</p>{% endfor %}
+</div>
+<a class="btn btn-ghost mt-4" href="{{ url_for('admin.municipalities') }}">← Volver</a>
+{% endblock %}

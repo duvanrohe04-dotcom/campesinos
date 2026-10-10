@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "components/forms.html" import wtf_field, village_select %}
+{% block title %}Crear cuenta · {{ config.SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="container-page max-w-md mt-8">
+  <h1>Crea tu cuenta</h1>
+  <p class="text-tierra-600 mt-1 mb-5">Es gratis y toma un minuto.</p>
+  <form method="post" class="card p-5" novalidate>
+    {{ form.hidden_tag() }}
+    <p class="alert alert-info mb-4" role="note">Con una sola cuenta puedes <strong>comprar, vender, alquilar o buscar</strong>. No tienes que elegir.</p>
+    {{ wtf_field(form.name, ph="Ej: Jorge Rojas", autocomplete="name") }}
+    {{ wtf_field(form.phone, "Será tu WhatsApp para que te contacten.", "3101234567", "numeric", "tel") }}
+    {{ wtf_field(form.password, "Mínimo 6 letras o números.", autocomplete="new-password") }}
+    {{ wtf_field(form.email, "Sirve para recuperar tu cuenta si olvidas la contraseña. Puedes agregarlo después.", "nombre@gmail.com", "email", "email") }}
+    <div class="mb-4">
+      <label class="label" for="municipality_id">{{ form.municipality_id.label.text }}</label>
+      {{ form.municipality_id(class_="input" ~ (" input-error" if form.municipality_id.errors else "")) }}
+      {% for e in form.municipality_id.errors %}<p class="error-text">{{ e }}</p>{% endfor %}
+    </div>
+    {{ village_select('village_id', villages, 'municipality_id', form.village_id.data, form.village_other.data or '', form.village_other.errors[0] if form.village_other.errors else '') }}
+    {{ wtf_field(form.farm_name, ph="Ej: Finca La Esperanza") }}
+    <div class="mb-5">
+      <label class="flex items-start gap-3 cursor-pointer text-base">
+        {{ form.accept_terms(class_="w-7 h-7 mt-0.5 shrink-0 accent-primary-700") }}
+        <span>Acepto los <a href="{{ url_for('main.terms') }}" target="_blank" rel="noopener">términos y condiciones</a> y la
+          <a href="{{ url_for('main.privacy') }}" target="_blank" rel="noopener">política de tratamiento de datos personales</a>.
+          Entiendo que mi celular se muestra en mis anuncios.</span>
+      </label>
+      {% for e in form.accept_terms.errors %}<p class="error-text" role="alert">{{ e }}</p>{% endfor %}
+    </div>
+    <button class="btn btn-primary btn-lg w-full" type="submit">Crear mi cuenta</button>
+  </form>
+  <p class="text-center mt-5">¿Ya tienes cuenta? <a class="font-bold" href="{{ url_for('auth.login') }}">Ingresa</a></p>
+</div>
+{% endblock %}

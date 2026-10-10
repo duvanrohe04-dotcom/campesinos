@@ -1,0 +1,32 @@
+{% from "components/icons.html" import ui %}
+
+{% macro alert(kind="info", text="") -%}
+<div class="alert alert-{{ kind }}" role="{{ 'alert' if kind == 'error' else 'status' }}">
+  <span class="shrink-0 mt-0.5">{{ ui({'success': 'check', 'error': 'warning', 'info': 'info'}.get(kind, 'info'), 'w-6 h-6') }}</span>
+  <div class="flex-1">{{ text }}{{ caller() if caller else '' }}</div>
+</div>
+{%- endmacro %}
+
+{% macro flashes() -%}
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="container-page mt-3 space-y-2">
+    {% for cat, msg in messages %}
+      {% set kind = 'error' if cat in ('error', 'danger') else ('success' if cat == 'success' else 'info') %}
+      <div class="alert alert-{{ kind }}" role="{{ 'alert' if kind == 'error' else 'status' }}">
+        <span class="shrink-0 mt-0.5">{{ ui({'success': 'check', 'error': 'warning', 'info': 'info'}[kind], 'w-6 h-6') }}</span>
+        <div class="flex-1">{{ msg }}</div>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+{%- endmacro %}
+
+{% macro ica_notice() -%}
+<div class="alert alert-info" role="note">
+  <span class="shrink-0 mt-0.5">{{ ui('info', 'w-6 h-6') }}</span>
+  <div class="flex-1 text-sm"><strong>Importante:</strong> para mover bovinos, equinos y porcinos se necesita la
+    <strong>guía sanitaria de movilización del ICA</strong>. Esta plataforma no la gestiona; pídela al vendedor antes de cerrar el negocio.</div>
+</div>
+{%- endmacro %}

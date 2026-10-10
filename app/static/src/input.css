@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { font-size: 17px; -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  html.text-large { font-size: 21px; }
+  [data-speak][aria-pressed="true"], [data-dictate][aria-pressed="true"] { @apply bg-sol-300 border-sol-600; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+  body { @apply bg-tierra-50 text-tierra-900 font-sans antialiased; }
+  h1, h2, h3 { @apply font-display text-tierra-900 leading-tight; }
+  h1 { @apply text-3xl font-bold; }
+  h2 { @apply text-2xl font-bold; }
+  h3 { @apply text-xl font-semibold; }
+  a { @apply text-primary-700; }
+  :focus-visible { @apply outline-none ring-4 ring-sol-400 ring-offset-2; }
+  .no-js .js-only { display: none !important; }
+  .js .no-js-only { display: none !important; }
+}
+
+@layer components {
+  /* Botones: mínimo 48px de alto para dedos grandes */
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 min-h-[3rem] text-base font-bold
+         transition active:scale-[.98] disabled:opacity-50 disabled:pointer-events-none no-underline cursor-pointer select-none; }
+  .btn[hidden] { display: none; }
+  .btn-lg { @apply min-h-[3.5rem] px-6 text-lg; }
+  .btn-sm { @apply min-h-[2.5rem] px-3 text-sm; }
+  .btn-primary { @apply bg-primary-700 text-white hover:bg-primary-800; }
+  .btn-secondary { @apply bg-secondary-600 text-white hover:bg-secondary-700; }
+  .btn-accent { @apply bg-sol-400 text-tierra-900 hover:bg-sol-300; }
+  .btn-outline { @apply border-2 border-primary-700 text-primary-700 bg-white hover:bg-primary-50; }
+  .btn-ghost { @apply text-tierra-700 hover:bg-tierra-100; }
+  .btn-danger { @apply bg-white text-secondary-700 border-2 border-secondary-600 hover:bg-secondary-50; }
+  .btn-whatsapp { @apply bg-whatsapp text-white hover:bg-whatsapp-dark; }
+  .btn-call { @apply bg-tierra-800 text-white hover:bg-tierra-900; }
+
+  /* Campos */
+  .input { @apply block w-full rounded-xl border-2 border-tierra-300 bg-white px-4 min-h-[3rem] text-base text-tierra-900
+           placeholder:text-tierra-600 focus:border-primary-600; }
+  textarea.input { @apply py-3 min-h-[7rem]; }
+  select.input { @apply pr-8; }
+  .label { @apply block text-base font-bold text-tierra-800 mb-1; }
+  .help { @apply text-sm text-tierra-600 mt-1; }
+  .error-text { @apply text-sm font-semibold text-secondary-700 mt-1; }
+  .input-error { @apply border-secondary-600; }
+
+  /* Tarjetas y estructura */
+  .card { @apply bg-white rounded-2xl shadow-card border border-tierra-200; }
+  .container-page { @apply mx-auto w-full max-w-6xl px-4; }
+  .section-title { @apply text-2xl font-bold mb-4; }
+
+  /* Badges */
+  .badge { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-wide; }
+  .badge-vendo { @apply bg-primary-100 text-primary-800; }
+  .badge-compro { @apply bg-sol-100 text-sol-700; }
+  .badge-alquilo { @apply bg-secondary-100 text-secondary-800; }
+  .badge-neutral { @apply bg-tierra-200 text-tierra-800; }
+  .badge-sold { @apply bg-tierra-800 text-white; }
+
+  /* Alertas */
+  .alert { @apply flex gap-3 rounded-xl border-l-8 p-4 text-base; }
+  .alert-success { @apply bg-primary-50 border-primary-600 text-primary-900; }
+  .alert-error { @apply bg-secondary-50 border-secondary-600 text-secondary-900; }
+  .alert-info { @apply bg-sol-50 border-sol-500 text-tierra-900; }
+
+  /* Chips */
+  .chip { @apply inline-flex items-center gap-1 rounded-full border-2 border-tierra-300 bg-white px-3 min-h-[2.5rem] text-sm font-bold text-tierra-800; }
+  .chip-active { @apply border-primary-700 bg-primary-50 text-primary-800; }
+
+  /* Selección con tarjetas (radio) */
+  .pick { @apply relative block cursor-pointer; }
+  .pick > input { @apply absolute opacity-0 inset-0 w-full h-full cursor-pointer; }
+  .pick > .pick-body { @apply flex flex-col items-center justify-center text-center gap-2 rounded-2xl border-2 border-tierra-300 bg-white p-3 min-h-[6.5rem] font-bold text-tierra-800 transition; }
+  .pick > input:checked + .pick-body { @apply border-primary-700 bg-primary-50 text-primary-800 ring-2 ring-primary-700; }
+  .pick > input:focus-visible + .pick-body { @apply ring-4 ring-sol-400; }
+
+  /* Galería con swipe (scroll-snap, sin JS) */
+  .gallery { @apply flex overflow-x-auto snap-x snap-mandatory gap-0 rounded-2xl bg-tierra-200; scrollbar-width: none; }
+  .gallery::-webkit-scrollbar { display: none; }
+  .gallery > * { @apply snap-center shrink-0 w-full; }
+
+  .step-hidden { display: none !important; }
+
+  /* Contenido de artículos (HTML sanitizado) */
+  .article-body h2 { @apply text-2xl font-bold mt-8 mb-2; }
+  .article-body h3 { @apply text-xl font-bold mt-6 mb-2; }
+  .article-body p { @apply my-3; }
+  .article-body ul { @apply list-disc pl-6 my-3 grid gap-1; }
+  .article-body ol { @apply list-decimal pl-6 my-3 grid gap-1; }
+  .article-body blockquote { @apply border-l-4 border-sol-400 bg-sol-50 px-4 py-2 my-4 italic; }
+  .article-body a { @apply font-bold underline; }
+}

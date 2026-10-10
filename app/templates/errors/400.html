@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% from "components/widgets.html" import empty_state %}
+{% block title %}La página venció · {{ config.SITE_NAME }}{% endblock %}
+{% block content %}
+{{ empty_state('Esta página ya venció', 'Pasó mucho tiempo desde que la abriste. Vuelve a cargarla e inténtalo de nuevo; tus datos no se perdieron si el formulario guardó un borrador.', 'Ir al inicio', url_for('main.home')) }}
+{% endblock %}

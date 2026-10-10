@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% from "components/widgets.html" import empty_state %}
+{% block title %}Sin permiso · {{ config.SITE_NAME }}{% endblock %}
+{% block content %}
+{{ empty_state('No tienes permiso para ver esto', 'Esta página es solo para otro tipo de cuenta.', 'Ir al inicio', url_for('main.home')) }}
+{% endblock %}

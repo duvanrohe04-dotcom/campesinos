@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "components/icons.html" import ui, cat_icon %}
+{% from "components/widgets.html" import empty_state, pagination %}
+{% block title %}Consejos del campo{% if category %} · {{ categories[category] }}{% endif %} · {{ config.SITE_NAME }}{% endblock %}
+{% block description %}Consejos prácticos para vender mejor y cuidar tus animales y cultivos: fotos, precios, guía del ICA, ventas seguras y más.{% endblock %}
+{% block content %}
+<div class="container-page mt-6">
+  <h1>Consejos del campo</h1>
+  <p class="text-lg text-tierra-700 mt-2 max-w-2xl">Ideas sencillas para vender mejor y trabajar más tranquilo.</p>
+  <nav class="flex gap-2 overflow-x-auto py-4" aria-label="Temas">
+    <a class="chip no-underline whitespace-nowrap {{ 'chip-active' if not category }}" href="{{ url_for('tips.index') }}">Todos</a>
+    {% for k, t in categories.items() %}<a class="chip no-underline whitespace-nowrap {{ 'chip-active' if category == k }}" href="{{ url_for('tips.index', categoria=k) }}">{{ t }}</a>{% endfor %}
+  </nav>
+  {% if p.items %}
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% for a in p.items %}
+    <article class="card overflow-hidden flex flex-col">
+      <a href="{{ url_for('tips.detail', slug=a.slug) }}" class="no-underline text-tierra-900 flex flex-col h-full">
+        <div class="aspect-[16/9] bg-primary-50 overflow-hidden grid place-items-center text-primary-300">
+          {% if a.cover %}<img src="{{ url_for('static', filename='uploads/' ~ a.cover_thumb) }}" alt="" loading="lazy" width="480" height="270" class="w-full h-full object-cover">{% else %}{{ ui('tag', 'w-16 h-16') }}{% endif %}
+        </div>
+        <div class="p-4 flex-1 flex flex-col gap-2">
+          <p><span class="badge badge-vendo">{{ categories.get(a.category, a.category) }}</span></p>
+          <h2 class="!text-lg !font-sans !font-extrabold leading-snug">{{ a.title }}</h2>
+          <p class="text-tierra-700 line-clamp-3">{{ a.summary }}</p>
+          <p class="text-sm text-tierra-600 mt-auto flex items-center gap-1">{{ ui('clock', 'w-4 h-4') }}{{ a.reading_minutes }} min de lectura</p>
+        </div>
+      </a>
+    </article>
+    {% endfor %}
+  </div>
+  {{ pagination(p, 'tips.index', {'categoria': category} if category else {}) }}
+  {% else %}
+  {{ empty_state('Aún no hay consejos en este tema', 'Pronto publicaremos más.', 'Ver todos los consejos', url_for('tips.index')) }}
+  {% endif %}
+</div>
+{% endblock %}

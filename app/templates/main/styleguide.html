@@ -1,0 +1,95 @@
+{% extends "admin/base.html" %}
+{% from "components/icons.html" import ui, cat_icon, logo, empty_art %}
+{% from "components/badges.html" import ad_badge, negotiable_badge, sold_badge, status_badge %}
+{% from "components/alerts.html" import alert, ica_notice %}
+{% from "components/buttons.html" import button, whatsapp_button, call_button %}
+{% from "components/widgets.html" import modal, empty_state %}
+{% from "components/forms.html" import text_field, select_field, yesno_field, choice_pick %}
+{% block title %}Guía de estilos · {{ config.SITE_NAME }}{% endblock %}
+
+{% block admin %}
+<h1>Sistema de diseño</h1>
+<p class="text-tierra-600">Solo para administradores. Muestra todos los componentes reutilizables (carpeta <code>templates/components/</code>).</p>
+
+<section class="mt-8"><h2 class="mb-3">Colores</h2>
+  {% for name, shades in (('primary · verde campo', ('50','100','200','300','400','500','600','700','800','900')),
+                          ('secondary · terracota', ('50','100','200','300','400','500','600','700','800','900')),
+                          ('sol · amarillo cálido', ('50','100','200','300','400','500','600','700')),
+                          ('tierra · neutros cálidos', ('50','100','200','300','400','500','600','700','800','900'))) %}
+  {% set key = name.split(' ')[0] %}
+  <p class="font-bold mt-3 mb-1">{{ name }}</p>
+  <div class="flex flex-wrap gap-1">
+    {% for s in shades %}<span class="w-14 h-14 rounded-lg text-[11px] font-bold grid place-items-end p-1 border border-tierra-200 {{ 'text-white' if s|int >= 600 else 'text-tierra-900' }}"
+      style="background: var(--c-{{ key }}-{{ s }})">{{ s }}</span>{% endfor %}
+  </div>{% endfor %}
+  <style>
+    {% set pal = {'primary': ['#F1F8EE','#DDEFD5','#BCE0AE','#93CB7F','#66AE4F','#478F33','#377427','#2E5D22','#264A1E','#1F3D1B'],
+                  'secondary': ['#FDF4EF','#FAE3D6','#F4C4AA','#EC9D77','#E0764A','#CF5B2E','#B64A24','#953B1F','#7A311E','#662B1B'],
+                  'sol': ['#FFFBEB','#FEF3C7','#FDE68A','#FCD34D','#F8BE2B','#E5A210','#B7790A','#8F5A0C'],
+                  'tierra': ['#FAF8F5','#F3EFE9','#E7E0D6','#D5CABB','#B3A594','#8A7D6D','#6B6054','#51483F','#393229','#241F19']} %}
+    {% set steps = ['50','100','200','300','400','500','600','700','800','900'] %}
+    :root{ {% for k, vals in pal.items() %}{% for v in vals %}--c-{{ k }}-{{ steps[loop.index0] }}:{{ v }};{% endfor %}{% endfor %} }
+  </style>
+  <p class="help mt-2">Texto blanco sobre primary-600+/secondary-600+ y texto oscuro sobre sol-300/400 cumple contraste AA (≥ 4.5:1).</p>
+</section>
+
+<section class="mt-8"><h2 class="mb-3">Tipografía</h2>
+  <p class="font-display text-4xl font-bold">Fraunces — títulos con carácter</p>
+  <p class="text-lg mt-2">Nunito — texto legible a 17 px. «Novillo cebú de 18 meses, vacunado y sano.»</p>
+  <p class="text-sm mt-1 text-tierra-600">Texto pequeño de apoyo · 14 px</p>
+</section>
+
+<section class="mt-8"><h2 class="mb-3">Botones</h2>
+  <div class="flex flex-wrap gap-3">
+    {{ button('Primario', kind='primary') }}{{ button('Secundario', kind='secondary') }}{{ button('Acento', kind='accent') }}
+    {{ button('Contorno', kind='outline') }}{{ button('Fantasma', kind='ghost') }}{{ button('Peligro', kind='danger', icon='trash') }}
+    {{ button('Grande', kind='primary', size='lg', icon='plus') }}{{ button('Pequeño', kind='primary', size='sm') }}
+  </div>
+  <div class="grid sm:grid-cols-2 gap-3 mt-4 max-w-xl">
+    {{ whatsapp_button('#') }}{{ call_button('#') }}
+  </div>
+</section>
+
+<section class="mt-8"><h2 class="mb-3">Badges</h2>
+  <div class="flex flex-wrap gap-2">{{ ad_badge('vendo') }}{{ ad_badge('compro') }}{{ ad_badge('alquilo') }}{{ negotiable_badge() }}{{ sold_badge() }}
+    {% for s in ('active', 'paused', 'expired') %}{{ status_badge(s) }}{% endfor %}</div>
+</section>
+
+<section class="mt-8"><h2 class="mb-3">Campos</h2>
+  <div class="card p-4 max-w-md">
+    {{ text_field('demo1', 'Título', {}, {}, 'Ej: Novillo cebú de 18 meses', 'Escribe aquí') }}
+    {{ text_field('demo2', 'Con error', {'demo2': 'x'}, {'demo2': 'Escribe al menos 5 letras.'}) }}
+    {{ select_field('demo3', 'Municipio', [('1', 'Vélez'), ('2', 'Barbosa')], {}, {}) }}
+    {{ yesno_field('demo4', '¿Vacunación al día?', {'demo4': 'si'}, {}) }}
+    {{ choice_pick('demo5', 'Sexo', [('M', 'Macho'), ('H', 'Hembra')], {}, {}) }}
+  </div>
+</section>
+
+<section class="mt-8"><h2 class="mb-3">Alertas</h2>
+  <div class="grid gap-2 max-w-xl">
+    {{ alert('success', '¡Cambios guardados!') }}{{ alert('error', 'Revisa los datos marcados en rojo.') }}{{ alert('info', 'Tu anuncio vence en 3 días.') }}{{ ica_notice() }}
+  </div>
+</section>
+
+<section class="mt-8"><h2 class="mb-3">Modal</h2>
+  <button class="btn btn-outline" data-modal-open="demo-modal">Abrir modal</button>
+  {% call modal('demo-modal', '¿Marcar como vendido?') %}
+    <p class="mb-4">El anuncio dejará de aparecer para los compradores.</p>
+    <div class="flex gap-2"><button class="btn btn-primary" data-modal-close>Sí, vendido</button><button class="btn btn-outline" data-modal-close>Cancelar</button></div>
+  {% endcall %}
+</section>
+
+<section class="mt-8"><h2 class="mb-3">Iconos de categoría</h2>
+  <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+    {% for n in ('vaca','caballo','cerdo','gallina','conejo','fruta','leche','frasco','costal','herramienta','sombrero','campo') %}
+    <div class="card p-3 grid place-items-center gap-1 text-primary-700">{{ cat_icon(n, 'w-14 h-14') }}<span class="text-xs font-bold text-tierra-700">{{ n }}</span></div>{% endfor %}
+  </div>
+  <div class="flex flex-wrap gap-3 mt-4 text-tierra-700">
+    {% for n in ('whatsapp','phone','heart','search','plus','home','user','check','x','filter','pin','warning','info','eye','clock','share','camera','image','trash','edit','pause','play','copy','refresh','chart','shield','flag','tag','lock','download','wifi-off') %}<span title="{{ n }}">{{ ui(n, 'w-7 h-7') }}</span>{% endfor %}
+  </div>
+</section>
+
+<section class="mt-8"><h2 class="mb-3">Estado vacío</h2>
+  <div class="card">{{ empty_state('Aún no hay nada por aquí', 'Cuando publiques algo, lo verás en este lugar.', 'Publicar gratis', '#') }}</div>
+</section>
+{% endblock %}

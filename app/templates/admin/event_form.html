@@ -1,0 +1,22 @@
+{% extends "admin/base.html" %}
+{% from "components/forms.html" import wtf_field, wtf_checkbox %}
+{% block admin %}
+<h1>{{ 'Editar' if event else 'Nuevo' }} evento</h1>
+<form method="post" enctype="multipart/form-data" class="card p-5 mt-4 max-w-xl" novalidate>
+  {{ form.hidden_tag() }}
+  {{ wtf_field(form.title, "Ej: Feria ganadera de Vélez") }}
+  {{ wtf_field(form.kind) }}
+  <div class="grid sm:grid-cols-2 gap-3">{{ wtf_field(form.starts_at) }}{{ wtf_field(form.ends_at) }}</div>
+  {{ wtf_field(form.place, "Ej: Recinto ferial") }}
+  {{ wtf_field(form.municipality_id) }}
+  {{ wtf_field(form.organizer, "Ej: ICA, SENA, Alcaldía de Vélez") }}
+  <div class="mb-4"><label class="label" for="description">{{ form.description.label.text }}</label>{{ form.description(class_="input", rows=5) }}
+    {% for e in form.description.errors %}<p class="error-text">{{ e }}</p>{% endfor %}</div>
+  <div class="mb-4"><label class="label" for="image">{{ form.image.label.text }}</label>
+    <input class="input !py-2" type="file" id="image" name="image" accept="image/*">
+    {% if event and event.image %}<img src="{{ url_for('static', filename='uploads/' ~ event.image_thumb) }}" alt="" class="mt-2 h-20 rounded-lg">{{ wtf_checkbox(form.remove_image) }}{% endif %}</div>
+  {{ wtf_checkbox(form.is_published) }}
+  <button class="btn btn-primary btn-lg w-full">Guardar</button>
+</form>
+<a class="btn btn-ghost mt-4" href="{{ url_for('admin.events') }}">← Volver</a>
+{% endblock %}

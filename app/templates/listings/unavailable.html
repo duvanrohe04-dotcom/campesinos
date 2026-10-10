@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% from "components/cards.html" import listing_card %}
+{% from "components/widgets.html" import empty_state %}
+{% block title %}Este anuncio ya no está disponible · {{ config.SITE_NAME }}{% endblock %}
+{% block head %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+{{ empty_state('Este anuncio ya no está disponible', 'Puede que ya se vendió o que el vendedor lo pausó. Mira otros parecidos.', 'Ver más ' ~ category.root.name|lower, url_for('listings.index', cat=category.root.slug)) }}
+{% if similar %}
+<section class="container-page mt-8" aria-labelledby="sim">
+  <h2 id="sim" class="!text-2xl mb-4">Anuncios parecidos</h2>
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">{% for s in similar %}{{ listing_card(s) }}{% endfor %}</div>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% from "components/widgets.html" import empty_state %}
+{% block title %}Sin conexión · {{ config.SITE_NAME }}{% endblock %}
+{% block content %}
+{{ empty_state('Estás sin internet', 'No te preocupes: cuando vuelva la señal, esta página se actualizará. Mientras tanto puedes ver lo que ya habías visitado.', 'Reintentar', '/') }}
+{% endblock %}

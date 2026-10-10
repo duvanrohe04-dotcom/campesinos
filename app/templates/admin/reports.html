@@ -1,0 +1,24 @@
+{% extends "admin/base.html" %}
+{% from "components/buttons.html" import post_button %}
+{% block admin %}
+<h1>Reportes</h1>
+<div class="flex gap-2 my-3">
+  {% for k, t in (('open', 'Abiertos'), ('reviewed', 'Revisados'), ('dismissed', 'Descartados')) %}
+  <a class="chip no-underline {{ 'chip-active' if status == k }}" href="{{ url_for('admin.reports', estado=k) }}">{{ t }}</a>{% endfor %}
+</div>
+<div class="grid gap-3">
+  {% for r in reports %}
+  <div class="card p-4">
+    <p class="font-bold"><span class="badge badge-alquilo">{{ reasons.get(r.reason, r.reason) }}</span> <a href="{{ listing_url(r.listing) }}">{{ r.listing.title }}</a></p>
+    {% if r.detail %}<p class="mt-1">{{ r.detail }}</p>{% endif %}
+    <p class="text-sm text-tierra-600 mt-1">{{ r.created_at|timeago }} · {{ r.reporter.name if r.reporter else 'Anónimo' }}</p>
+    {% if r.status == 'open' %}
+    <div class="flex flex-wrap gap-2 mt-3">
+      {{ post_button(url_for('admin.report_action', report_id=r.id, action='retirar'), 'Retirar anuncio', 'danger') }}
+      {{ post_button(url_for('admin.report_action', report_id=r.id, action='revisado'), 'Marcar revisado', 'primary') }}
+      {{ post_button(url_for('admin.report_action', report_id=r.id, action='descartar'), 'Descartar', 'outline') }}
+    </div>{% endif %}
+  </div>
+  {% else %}<p class="text-tierra-600">No hay reportes aquí.</p>{% endfor %}
+</div>
+{% endblock %}

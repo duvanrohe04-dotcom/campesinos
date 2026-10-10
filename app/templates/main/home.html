@@ -1,0 +1,101 @@
+﻿{% extends "base.html" %}
+{% from "components/icons.html" import ui, cat_icon %}
+{% from "components/cards.html" import listing_card, category_tile %}
+{% from "components/widgets.html" import empty_state %}
+
+{% macro section(title, items, href) %}
+{% if items %}
+<section class="container-page mt-10" aria-labelledby="s-{{ loop.index if false else title|replace(' ', '') }}">
+  <div class="flex items-end justify-between gap-3 mb-4">
+    <h2 id="s-{{ title|replace(' ', '') }}" class="!text-2xl">{{ title }}</h2>
+    <a class="font-bold whitespace-nowrap" href="{{ href }}">Ver todo</a>
+  </div>
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    {% for l in items %}{{ listing_card(l) }}{% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endmacro %}
+
+{% block content %}
+<section class="bg-primary-700 text-white">
+  <div class="container-page py-8 lg:py-12">
+    <h1 class="!text-white !text-3xl lg:!text-5xl max-w-2xl">Del campo directo a tu mesa</h1>
+    <p class="mt-2 text-primary-100 text-lg max-w-xl">Productos, animales, insumos y servicios de la provincia de Vélez. Habla directo con el campesino, sin intermediarios.</p>
+    <form action="{{ url_for('listings.index') }}" method="get" class="mt-6 bg-white rounded-2xl p-3 grid gap-3 lg:grid-cols-[1fr_14rem_auto] max-w-4xl text-tierra-900" role="search">
+      <label class="sr-only" for="hero-q">¿Qué estás buscando?</label>
+      <input id="hero-q" name="q" type="search" class="input !min-h-[3.5rem] text-lg" placeholder="¿Qué buscas? Ej: novillo, guayaba, abono" autocomplete="off">
+      <label class="sr-only" for="hero-mun">Municipio</label>
+      <select id="hero-mun" name="mun" class="input !min-h-[3.5rem]">
+        <option value="">Todos los municipios</option>
+        {% for m in nav_municipalities %}<option value="{{ m.id }}">{{ m.name }}</option>{% endfor %}
+      </select>
+      <button class="btn btn-primary btn-lg" type="submit">{{ ui('search', 'w-6 h-6') }}Buscar</button>
+    </form>
+  </div>
+</section>
+
+<section class="container-page mt-8" aria-labelledby="cats">
+  <h2 id="cats" class="!text-2xl mb-4">¿Qué necesitas?</h2>
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+    {% for c in nav_categories %}{{ category_tile(c) }}{% endfor %}
+  </div>
+</section>
+
+{% if next_event %}
+<section class="container-page mt-8" aria-labelledby="proximo-evento">
+  <a href="{{ event_url(next_event) }}" class="card p-4 flex items-center gap-4 no-underline text-tierra-900 border-sol-400 bg-sol-50">
+    <span class="shrink-0 w-16 rounded-xl bg-primary-700 text-white text-center py-2"><span class="block text-2xl font-extrabold leading-none">{{ next_event.starts_at.day }}</span><span class="block text-xs font-bold uppercase">{{ next_event.starts_at.strftime('%b') }}</span></span>
+    <span class="min-w-0 flex-1"><span id="proximo-evento" class="block text-xs font-extrabold uppercase text-sol-700">Próximo evento · {{ EVENT_KINDS.get(next_event.kind, 'Evento') }}</span>
+      <span class="block font-extrabold text-lg leading-snug">{{ next_event.title }}</span>
+      <span class="block text-sm text-tierra-700">{{ next_event.starts_at.strftime('%H:%M') }}{% if next_event.place %} · {{ next_event.place }}{% endif %}{% if next_event.municipality %}, {{ next_event.municipality.name }}{% endif %}</span></span>
+    <span class="hidden sm:inline font-bold text-primary-700">Ver agenda →</span>
+  </a>
+</section>
+{% endif %}
+
+{# Cómo funciona en 3 pasos: ayuda a quien llega por primera vez #}
+<section class="container-page mt-10" aria-labelledby="como">
+  <h2 id="como" class="!text-2xl mb-4">Así de fácil</h2>
+  <ol class="grid sm:grid-cols-3 gap-3">
+    {% for icon, head, text in (('search', 'Busca o publica', 'Encuentra lo que necesitas o publica lo que tienes, gratis.'),
+                                ('eye', 'Mira los detalles', 'Fotos, precio, cantidad y lugar, todo claro.'),
+                                ('whatsapp', 'Habla directo', 'Escribe por WhatsApp o llama. Sin intermediarios.')) %}
+    <li class="card p-4 flex items-center gap-3">
+      <span class="relative grid place-items-center w-14 h-14 shrink-0 rounded-2xl bg-primary-100 text-primary-800">{{ ui(icon, 'w-7 h-7') }}
+        <span class="absolute -top-2 -left-2 grid place-items-center w-6 h-6 rounded-full bg-sol-400 text-tierra-900 text-xs font-extrabold">{{ loop.index }}</span></span>
+      <div><p class="font-extrabold">{{ head }}</p><p class="text-sm text-tierra-700">{{ text }}</p></div>
+    </li>
+    {% endfor %}
+  </ol>
+  <p class="mt-3"><a class="font-bold" href="{{ url_for('main.how_it_works') }}">Ver cómo funciona con más detalle →</a></p>
+</section>
+
+{% if recent %}
+<section class="container-page mt-10" aria-labelledby="recientes">
+  <div class="flex items-end justify-between gap-3 mb-4">
+    <h2 id="recientes" class="!text-2xl">Recién publicado</h2>
+    <a class="font-bold whitespace-nowrap" href="{{ url_for('listings.index') }}">Ver todo</a>
+  </div>
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    {% for l in recent %}{{ listing_card(l) }}{% endfor %}
+  </div>
+</section>
+{% else %}
+{{ empty_state('Aún no hay anuncios', 'Sé el primero en publicar lo que tienes en tu finca.', 'Publica gratis', url_for('profiles.new_listing')) }}
+{% endif %}
+
+{{ section('Animales', animals, url_for('listings.index', cat='bovinos')) }}
+{{ section('Del campo a tu mesa', table, url_for('listings.index', cat='agricolas')) }}
+
+<section class="container-page mt-12">
+  <div class="rounded-xl2 bg-sol-100 border-2 border-sol-300 p-6 lg:p-10 flex flex-col lg:flex-row lg:items-center gap-5">
+    <div class="flex-1">
+      <h2 class="!text-3xl">¿Tienes algo para vender?</h2>
+      <p class="mt-2 text-lg text-tierra-800">Publica gratis en 4 pasos sencillos, desde tu celular. Los compradores te escriben directo a tu WhatsApp.</p>
+    </div>
+    <a href="{{ url_for('profiles.new_listing') }}" class="btn btn-secondary btn-lg">{{ ui('plus', 'w-6 h-6') }}Publica gratis</a>
+  </div>
+</section>
+{% endblock %}
+

@@ -1,0 +1,7 @@
+{% from "components/icons.html" import ui %}
+<div class="alert alert-error mb-6" role="note">
+  {{ ui('warning', 'w-6 h-6 shrink-0') }}
+  <div><strong>BORRADOR — PENDIENTE DE REVISIÓN POR UN ABOGADO.</strong>
+    Este texto es una base de trabajo y no reemplaza asesoría legal. Debe ser revisado, completado
+    (los datos entre corchetes <code>[ ]</code>) y aprobado antes de publicar la plataforma. Versión: {{ config.LEGAL_VERSION }}.</div>
+</div>

@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% from "components/widgets.html" import empty_state %}
+{% block title %}Las fotos pesan demasiado · {{ config.SITE_NAME }}{% endblock %}
+{% block content %}
+{{ empty_state('Las fotos pesan demasiado', 'Todas juntas superan el tamaño permitido. Vuelve a publicar con menos fotos o con fotos más livianas.', 'Volver a publicar', url_for('profiles.new_listing')) }}
+{% endblock %}

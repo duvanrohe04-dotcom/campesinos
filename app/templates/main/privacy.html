@@ -1,0 +1,62 @@
+﻿{% extends "base.html" %}
+{% block title %}Política de tratamiento de datos personales · {{ config.SITE_NAME }}{% endblock %}
+{% block description %}Cómo {{ config.SITE_NAME }} recolecta, usa y protege tus datos personales y cuáles son tus derechos, según la Ley 1581 de 2012.{% endblock %}
+{% block content %}
+<article class="container-page max-w-3xl mt-6 leading-relaxed text-lg [&_h2]:mt-8 [&_h2]:mb-2 [&_h2]:!text-xl [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:grid [&_ul]:gap-1">
+  {% include "main/_legal_banner.html" %}
+  <h1>Política de tratamiento de datos personales</h1>
+  <p class="text-tierra-600">Ley 1581 de 2012 y normas que la reglamentan · Última actualización: [FECHA]</p>
+
+  <h2>1. Responsable del tratamiento</h2>
+  <ul>
+    <li><strong>Responsable:</strong> [NOMBRE O RAZÓN SOCIAL]</li>
+    <li><strong>NIT / C.C.:</strong> [NÚMERO]</li>
+    <li><strong>Domicilio:</strong> [DIRECCIÓN, MUNICIPIO, SANTANDER]</li>
+    <li><strong>Correo:</strong> <a href="mailto:{{ config.CONTACT_EMAIL }}">{{ config.CONTACT_EMAIL }}</a> · <strong>Teléfono:</strong> [TELÉFONO]</li>
+  </ul>
+
+  <h2>2. Datos que recolectamos</h2>
+  <ul>
+    <li>Nombre, número de celular (WhatsApp), municipio, vereda y nombre de la finca.</li>
+    <li>Contenido que publicas: textos, fotos, precios y ubicación del anuncio.</li>
+    <li>Mensajes que nos envías por el formulario de contacto y reportes de anuncios.</li>
+    <li>Datos técnicos mínimos: cookies de sesión, intentos de ingreso y conteo de vistas y contactos de los anuncios.</li>
+  </ul>
+  <p><strong>No recolectamos datos sensibles</strong> (salud, origen étnico, afiliación política, biometría, etc.) ni datos de menores de edad. Si crees que lo hicimos, avísanos para eliminarlos.</p>
+
+  <h2>3. Para qué usamos tus datos (finalidades)</h2>
+  <ul>
+    <li>Crear y administrar tu cuenta y permitirte publicar y guardar favoritos.</li>
+    <li><strong>Mostrar tu nombre, finca, municipio y celular en tus anuncios, para que los compradores te contacten.</strong> Esto es público.</li>
+    <li>Atender consultas, reportes y solicitudes; moderar contenido y prevenir fraudes.</li>
+    <li>Mostrarte estadísticas de tus anuncios y mejorar la Plataforma.</li>
+    <li>Cumplir obligaciones legales.</li>
+  </ul>
+
+  <h2>4. Autorización</h2>
+  <p>Al crear tu cuenta y marcar la casilla de aceptación, nos autorizas de forma previa, expresa e informada para tratar tus datos con estas finalidades. Guardamos la fecha y la versión del texto que aceptaste. Puedes revocar tu autorización o pedir la supresión de tus datos en cualquier momento, salvo que exista un deber legal o contractual de conservarlos.</p>
+
+  <h2>5. Tus derechos como titular</h2>
+  <ul>
+    <li>Conocer, actualizar y rectificar tus datos.</li>
+    <li>Solicitar prueba de la autorización que nos diste.</li>
+    <li>Ser informado sobre el uso que le damos a tus datos.</li>
+    <li>Presentar quejas ante la Superintendencia de Industria y Comercio (SIC) por infracciones a la ley.</li>
+    <li>Revocar la autorización y/o solicitar la supresión de tus datos.</li>
+    <li>Acceder de forma gratuita a tus datos personales.</li>
+  </ul>
+
+  <h2>6. Cómo ejercer tus derechos</h2>
+  <p>Escríbenos a <a href="mailto:{{ config.CONTACT_EMAIL }}">{{ config.CONTACT_EMAIL }}</a> o por el <a href="{{ url_for('main.contact') }}">formulario de contacto</a> (elige «Datos personales»). Indica tu nombre y celular de registro y lo que solicitas. Responderemos las <strong>consultas en máximo 10 días hábiles</strong> y los <strong>reclamos en máximo 15 días hábiles</strong>, prorrogables conforme a la ley. [VERIFICAR PLAZOS Y PROCEDIMIENTO CON ABOGADO].</p>
+
+  <h2>7. Seguridad y conservación</h2>
+  <p>Guardamos tus contraseñas cifradas y usamos medidas razonables para proteger la información. Conservamos tus datos mientras tengas cuenta y el tiempo necesario para cumplir las finalidades y obligaciones legales. [DEFINIR TIEMPOS DE CONSERVACIÓN].</p>
+
+  <h2>8. Terceros y transferencias</h2>
+  <p>No vendemos tus datos. Pueden intervenir proveedores que nos prestan servicios técnicos (alojamiento del servidor, mapas o envío de mensajes), que deben proteger la información. [LISTAR PROVEEDORES Y UBICACIÓN DE SERVIDORES].</p>
+
+  <h2>9. Cambios a esta política</h2>
+  <p>Si cambiamos esta política de forma importante, lo avisaremos en la Plataforma y, cuando la ley lo exija, pediremos una nueva autorización.</p>
+</article>
+{% endblock %}
+

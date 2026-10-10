@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% from "components/icons.html" import ui %}
+{% from "components/alerts.html" import ica_notice %}
+{% block title %}Consejos para comprar seguro · {{ config.SITE_NAME }}{% endblock %}
+{% block description %}Cómo comprar animales, cosechas e insumos sin sorpresas: ver en persona, no pagar por adelantado, pedir la guía del ICA y más.{% endblock %}
+{% block content %}
+<div class="container-page max-w-3xl mt-6">
+  <h1>Consejos para comprar seguro</h1>
+  <p class="text-lg text-tierra-700 mt-2 mb-6">La mayoría de los negocios salen bien. Estos cuidados te ayudan a que todos salgan bien.</p>
+
+  <ol class="grid gap-4">
+    {% for icon, head, text in (
+      ('eye', 'Mira el animal o el producto en persona', 'Antes de pagar, ve al lugar y revisa con tus propios ojos: que el animal esté sano, que el producto sea el de las fotos. Si puedes, ve acompañado.'),
+      ('lock', 'No pagues por adelantado', 'Nunca envíes dinero a alguien que no conoces para «reservar» o «separar». Paga cuando recibas y revises lo acordado.'),
+      ('shield', 'Pide la guía sanitaria del ICA', 'Para mover bovinos, equinos y porcinos se necesita la guía sanitaria de movilización del ICA. Pídela al vendedor o tramítala antes de transportar los animales.'),
+      ('tag', 'Compara precios', 'Mira otros anuncios parecidos. Un precio demasiado bajo puede ser señal de engaño.'),
+      ('user', 'Revisa al vendedor', 'Entra a su perfil: mira desde cuándo está, sus calificaciones y si tiene la insignia «Vendedor verificado» o el celular verificado.'),
+      ('phone', 'Acuerda todo claro', 'Pon por escrito (WhatsApp sirve) el precio, la cantidad, el lugar y la fecha de entrega. Pide un recibo o factura cuando sea posible.'),
+      ('flag', 'Reporta lo que no te cuadre', 'Si un anuncio parece falso o te piden plata antes de verlo, toca «Reportar» y nosotros lo revisamos.')) %}
+    <li class="card p-4 flex gap-4">
+      <span class="relative grid place-items-center w-14 h-14 shrink-0 rounded-2xl bg-primary-100 text-primary-800">{{ ui(icon, 'w-7 h-7') }}
+        <span class="absolute -top-2 -left-2 grid place-items-center w-6 h-6 rounded-full bg-sol-400 text-tierra-900 text-xs font-extrabold">{{ loop.index }}</span></span>
+      <div><h2 class="!text-lg !font-sans !font-extrabold">{{ head }}</h2><p class="text-tierra-800 mt-1">{{ text }}</p></div>
+    </li>
+    {% endfor %}
+  </ol>
+  <div class="mt-6">{{ ica_notice() }}</div>
+  <div class="flex flex-wrap gap-3 mt-6">
+    <a class="btn btn-primary btn-lg" href="{{ url_for('listings.index') }}">Ver anuncios</a>
+    <a class="btn btn-outline btn-lg" href="{{ url_for('main.faq') }}">Preguntas frecuentes</a>
+  </div>
+</div>
+{% endblock %}

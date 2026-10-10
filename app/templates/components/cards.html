@@ -1,0 +1,64 @@
+﻿{% from "components/icons.html" import cat_icon, ui %}
+{% from "components/badges.html" import ad_badge, negotiable_badge, sold_badge, status_badge %}
+
+{% macro price_text(l, big=True) -%}
+{%- if l.price is none -%}<span class="{{ 'text-xl' if big else 'text-base' }} font-extrabold text-primary-800">A convenir</span>
+{%- else -%}<span class="{{ 'text-xl' if big else 'text-base' }} font-extrabold text-primary-800">{{ l.price|cop }}</span>{% if l.price_unit and l.price_unit != 'a convenir' %}<span class="text-sm font-semibold text-tierra-600"> / {{ l.price_unit }}</span>{% endif %}
+{%- endif -%}
+{%- endmacro %}
+
+{# Tarjeta de publicación: foto principal, precio, municipio, badges y tiempo #}
+{% macro listing_card(l, favorite=None) -%}
+<article class="card overflow-hidden flex flex-col h-full">
+  <a href="{{ listing_url(l) }}" class="block no-underline text-tierra-900 flex flex-col h-full" aria-label="{{ l.title }}">
+    <div class="aspect-[4/3] bg-primary-50 relative overflow-hidden">
+      {% if l.main_image %}
+        <img src="{{ url_for('static', filename='uploads/' ~ l.main_image.thumb) }}" alt="" width="480" height="360"
+             loading="lazy" decoding="async" class="w-full h-full object-cover">
+      {% else %}
+        <div class="w-full h-full flex items-center justify-center text-primary-300">{{ cat_icon(l.category.icon, 'w-20 h-20') }}</div>
+      {% endif %}
+      <div class="absolute top-2 left-2 flex gap-1 flex-wrap">{{ ad_badge(l.ad_type) }}{% if l.status == 'sold' %}{{ sold_badge() }}{% endif %}</div>
+    </div>
+    <div class="p-3 flex-1 flex flex-col gap-1">
+      <p class="leading-none">{{ price_text(l) }}</p>
+      {% if l.negotiable %}<p>{{ negotiable_badge() }}</p>{% endif %}
+      <h3 class="!text-base !font-bold !font-sans leading-snug line-clamp-2">{{ l.title }}</h3>
+      <p class="text-sm text-tierra-600 flex items-center gap-1">{{ ui('pin', 'w-4 h-4 shrink-0') }}<span class="truncate">{{ l.location_text }}</span></p>
+      <p class="text-xs text-tierra-600 mt-auto pt-1 flex items-center justify-between gap-1">{{ l.created_at|timeago }}{% if l.user.is_verified_seller %}<span class="inline-flex items-center gap-0.5 font-bold text-primary-700" title="Vendedor verificado">{{ ui('shield', 'w-4 h-4') }}Verificado</span>{% endif %}</p>
+    </div>
+  </a>
+</article>
+{%- endmacro %}
+
+{# Acceso rápido por categoría con icono grande #}
+{% macro category_tile(c) -%}
+{% set photo = category_photo(c) %}
+{% if photo %}
+<a href="{{ url_for('listings.index', cat=c.slug) }}"
+   class="card group relative block overflow-hidden aspect-[4/3] no-underline hover:border-primary-600 transition">
+  <img src="{{ url_for('static', filename=photo) }}" alt="" loading="lazy" width="600" height="450" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-300">
+  <span class="absolute inset-x-0 bottom-0 px-3 pb-2 pt-10 bg-gradient-to-t from-black/80 to-transparent text-white font-extrabold leading-tight text-[15px]">{{ c.name }}</span>
+</a>
+{% else %}
+<a href="{{ url_for('listings.index', cat=c.slug) }}"
+   class="card flex flex-col items-center justify-center gap-2 p-3 min-h-[7.5rem] text-center no-underline text-tierra-800 hover:border-primary-600 hover:bg-primary-50 transition">
+  <span class="text-primary-700">{{ cat_icon(c.icon, 'w-14 h-14') }}</span>
+  <span class="font-extrabold leading-tight text-[15px]">{{ c.name }}</span>
+</a>
+{% endif %}
+{%- endmacro %}
+
+{# Foto de perfil o inicial del nombre #}
+{% macro avatar(user, size="w-14 h-14", text="text-xl") -%}
+{% if user.photo %}<img src="{{ url_for('static', filename='uploads/' ~ user.photo_thumb) }}" alt="Foto de {{ user.name }}" loading="lazy" width="96" height="96" class="{{ size }} shrink-0 rounded-full object-cover bg-primary-100">
+{%- else %}<span class="grid place-items-center {{ size }} shrink-0 rounded-full bg-primary-100 text-primary-800 font-extrabold {{ text }}" aria-hidden="true">{{ user.name[:1]|upper }}</span>{% endif %}
+{%- endmacro %}
+
+{% macro stat(label, value, icon="chart") -%}
+<div class="card p-4 flex items-center gap-3">
+  <span class="grid place-items-center w-12 h-12 rounded-xl bg-primary-100 text-primary-800">{{ ui(icon, 'w-6 h-6') }}</span>
+  <div><p class="text-2xl font-extrabold leading-none">{{ value }}</p><p class="text-sm text-tierra-600">{{ label }}</p></div>
+</div>
+{%- endmacro %}
+

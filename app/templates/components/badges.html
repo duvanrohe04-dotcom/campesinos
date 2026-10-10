@@ -1,0 +1,35 @@
+{% from "components/icons.html" import ui %}
+
+{% macro ad_badge(ad_type) -%}
+<span class="badge badge-{{ ad_type }}">{{ AD_TYPE_SHORT.get(ad_type, ad_type) }}</span>
+{%- endmacro %}
+
+{% macro negotiable_badge() -%}
+<span class="badge badge-neutral">Negociable</span>
+{%- endmacro %}
+
+{% macro sold_badge() -%}
+<span class="badge badge-sold">Vendido</span>
+{%- endmacro %}
+
+{% macro status_badge(status) -%}
+{%- set cls = {'active': 'badge-vendo', 'paused': 'badge-compro', 'sold': 'badge-sold', 'expired': 'badge-alquilo', 'removed': 'badge-alquilo'} -%}
+<span class="badge {{ cls.get(status, 'badge-neutral') }}">{{ STATUSES.get(status, status) }}</span>
+{%- endmacro %}
+
+{# Insignia otorgada por el admin #}
+{% macro verified_seller_badge() -%}
+<span class="badge bg-primary-700 text-white">{{ ui('shield', 'w-3.5 h-3.5') }}Vendedor verificado</span>
+{%- endmacro %}
+
+{# Correo confirmado por código #}
+{% macro email_verified_badge() -%}
+<span class="badge bg-sol-100 text-sol-700">{{ ui('check', 'w-3.5 h-3.5') }}Correo verificado</span>
+{%- endmacro %}
+
+{# Estrellas de 1 a 5 (valor puede tener decimales) #}
+{% macro stars(value, size='w-5 h-5') -%}
+<span class="inline-flex text-sol-500" role="img" aria-label="{{ value if value is not none else 0 }} de 5 estrellas">
+  {%- for i in range(1, 6) -%}{{ ui('star-fill' if (value or 0) >= i - 0.25 else 'star', size) }}{%- endfor -%}
+</span>
+{%- endmacro %}

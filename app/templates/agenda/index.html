@@ -1,0 +1,66 @@
+﻿{% extends "base.html" %}
+{% from "components/icons.html" import ui %}
+{% from "components/widgets.html" import empty_state %}
+{% set m = page.month %}
+{% block title %}Agenda del campo · {{ m.title }} · {{ config.SITE_NAME }}{% endblock %}
+{% block description %}Ferias ganaderas, subastas, mercados campesinos, jornadas de vacunación y capacitaciones en la provincia de Vélez.{% endblock %}
+{% block content %}
+<div class="container-page mt-6">
+  <h1>Agenda del campo</h1>
+  <p class="text-lg text-tierra-700 mt-2 max-w-2xl">Ferias, subastas, mercados, vacunación y capacitaciones cerca de ti.</p>
+
+  <nav class="flex gap-2 overflow-x-auto py-4" aria-label="Tipo de evento">
+    <a class="chip no-underline whitespace-nowrap {{ 'chip-active' if not page.kind }}" href="{{ url_for('agenda.index', mes=m.year ~ '-' ~ '%02d'|format(m.month)) }}">Todos</a>
+    {% for k, t in kinds.items() %}<a class="chip no-underline whitespace-nowrap {{ 'chip-active' if page.kind == k }}" href="{{ url_for('agenda.index', tipo=k, mes=m.year ~ '-' ~ '%02d'|format(m.month)) }}">{{ t }}</a>{% endfor %}
+  </nav>
+
+  <div class="lg:grid lg:grid-cols-[1.3fr_1fr] lg:gap-6">
+    <section class="card p-3 lg:p-4" aria-labelledby="mes">
+      <div class="flex items-center justify-between gap-2 mb-3">
+        <a class="btn btn-outline btn-sm" href="{{ url_for('agenda.index', mes=m.previous, tipo=page.kind or None) }}" aria-label="Mes anterior">{{ ui('left', 'w-5 h-5') }}</a>
+        <h2 id="mes" class="!text-xl">{{ m.title }}</h2>
+        <a class="btn btn-outline btn-sm" href="{{ url_for('agenda.index', mes=m.following, tipo=page.kind or None) }}" aria-label="Mes siguiente">{{ ui('right', 'w-5 h-5') }}</a>
+      </div>
+      <table class="w-full table-fixed text-center" role="grid">
+        <caption class="sr-only">Calendario de {{ m.title }}</caption>
+        <thead><tr class="text-xs font-extrabold text-tierra-600">{% for d in ('Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom') %}<th scope="col" class="py-1">{{ d }}</th>{% endfor %}</tr></thead>
+        <tbody>
+          {% for week in m.weeks %}
+          <tr>
+            {% for day in week %}
+            {% set evs = m.events_by_day.get(day, []) %}
+            <td class="p-0.5 align-top">
+              <div class="min-h-[3.25rem] rounded-lg p-1 text-sm {{ 'bg-tierra-100 text-tierra-500' if day.month != m.month else 'bg-white border border-tierra-200' }} {{ 'ring-2 ring-primary-600' if evs }}">
+                <span class="block font-bold {{ 'text-tierra-500' if day.month != m.month }}">{{ day.day }}</span>
+                {% for e in evs[:2] %}<a href="{{ event_url(e) }}" class="block truncate text-[11px] leading-tight font-bold text-primary-800 no-underline" title="{{ e.title }}">{{ e.title }}</a>{% endfor %}
+                {% if evs|length > 2 %}<span class="text-[11px] text-tierra-600">+{{ evs|length - 2 }} más</span>{% endif %}
+              </div>
+            </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section class="mt-6 lg:mt-0" aria-labelledby="proximos">
+      <h2 id="proximos" class="!text-xl mb-3">Próximos eventos</h2>
+      {% if page.upcoming %}
+      <ul class="grid gap-3">
+        {% for e in page.upcoming %}
+        <li><a href="{{ event_url(e) }}" class="card p-3 flex gap-3 no-underline text-tierra-900">
+          <span class="shrink-0 w-16 rounded-xl bg-primary-700 text-white text-center py-2"><span class="block text-2xl font-extrabold leading-none">{{ e.starts_at.day }}</span><span class="block text-xs font-bold uppercase">{{ e.starts_at.strftime('%b') }}</span></span>
+          <span class="min-w-0"><span class="badge badge-compro">{{ kinds.get(e.kind, e.kind) }}</span>
+            <span class="block font-extrabold mt-1">{{ e.title }}</span>
+            <span class="block text-sm text-tierra-600">{{ e.starts_at.strftime('%H:%M') }} · {{ e.place or '' }}{% if e.municipality %}{{ ', ' if e.place }}{{ e.municipality.name }}{% endif %}</span></span>
+        </a></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      {{ empty_state('No hay eventos próximos', 'Cuando se anuncie una feria, subasta o jornada, la verás aquí.') }}
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}
+

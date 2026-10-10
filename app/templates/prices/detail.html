@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "components/icons.html" import ui, cat_icon %}
+{% from "components/widgets.html" import empty_state %}
+{% block title %}Precio de {{ d.category.name|lower }}{% if d.unit %} por {{ d.unit }}{% endif %} · {{ config.SITE_NAME }}{% endblock %}
+{% block description %}Precio de referencia de {{ d.category.name|lower }} en la provincia de Vélez y cómo ha cambiado semana a semana.{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+<script src="{{ url_for('static', filename='js/prices.js') }}" defer></script>
+{% endblock %}
+{% block content %}
+<div class="container-page max-w-3xl mt-6">
+  <a class="font-bold" href="{{ url_for('prices.index', cat=d.category.root.slug) }}">← Precios del campo</a>
+  <h1 class="mt-2 flex items-center gap-3"><span class="text-primary-700">{{ cat_icon(d.category.icon, 'w-12 h-12') }}</span>{{ d.category.name }}</h1>
+
+  {% if d.rows %}
+  {% if d.rows|length > 1 %}
+  <nav class="flex gap-2 overflow-x-auto py-3" aria-label="Unidad de precio">
+    {% for row in d.rows %}<a class="chip no-underline {{ 'chip-active' if row.unit == d.unit }}" href="{{ url_for('prices.detail', slug=d.category.slug, unidad=row.unit) }}">por {{ row.unit }}</a>{% endfor %}
+  </nav>{% endif %}
+  {% set current = d.rows|selectattr('unit', 'equalto', d.unit)|first %}
+  <section class="card p-5 mt-3" aria-labelledby="ahora">
+    <h2 id="ahora" class="!text-lg !font-sans !font-extrabold">Hoy, por {{ d.unit }}</h2>
+    <p class="text-4xl font-extrabold text-primary-800 mt-1">{{ current.snapshot.average|cop }}</p>
+    <dl class="grid grid-cols-3 gap-2 mt-3 text-center">
+      <div class="rounded-xl bg-tierra-100 p-2"><dt class="text-xs font-bold text-tierra-600">Más bajo</dt><dd class="font-extrabold">{{ current.snapshot.minimum|cop }}</dd></div>
+      <div class="rounded-xl bg-tierra-100 p-2"><dt class="text-xs font-bold text-tierra-600">Más común</dt><dd class="font-extrabold">{{ current.snapshot.median|cop }}</dd></div>
+      <div class="rounded-xl bg-tierra-100 p-2"><dt class="text-xs font-bold text-tierra-600">Más alto</dt><dd class="font-extrabold">{{ current.snapshot.maximum|cop }}</dd></div>
+    </dl>
+    <p class="help mt-2">Según {{ current.snapshot.sample_size }} anuncios de los últimos 30 días.</p>
+  </section>
+
+  <section class="card p-5 mt-4" aria-labelledby="tendencia">
+    <h2 id="tendencia" class="!text-lg !font-sans !font-extrabold">Cómo ha cambiado (promedio por semana)</h2>
+    <div class="relative h-56 mt-3"><canvas id="trend-chart" role="img" aria-label="Gráfico del precio promedio por semana"></canvas></div>
+    <details class="mt-2"><summary class="cursor-pointer font-bold text-sm">Ver en tabla</summary>
+      <table class="w-full text-sm mt-2"><thead><tr class="text-left text-tierra-600"><th>Semana</th><th>Promedio</th></tr></thead>
+        <tbody>{% for label in d.trend.labels %}<tr><td>{{ label }}</td><td>{{ d.trend.averages[loop.index0]|cop }}</td></tr>{% endfor %}</tbody></table></details>
+    <script type="application/json" id="trend-data">{{ {"labels": d.trend.labels, "averages": d.trend.averages, "minimums": d.trend.minimums, "maximums": d.trend.maximums}|tojson }}</script>
+  </section>
+  <div class="flex flex-wrap gap-3 mt-6">
+    <a class="btn btn-primary btn-lg" href="{{ url_for('listings.index', sub=d.category.slug) }}">Ver anuncios de {{ d.category.name|lower }}</a>
+    <a class="btn btn-outline btn-lg" href="{{ url_for('profiles.new_listing') }}">Publicar el mío</a>
+  </div>
+  {% else %}
+  {{ empty_state('Todavía no hay precio de referencia', 'Se necesitan al menos 3 anuncios de ' ~ d.category.name|lower ~ ' en los últimos 30 días.', 'Ver anuncios', url_for('listings.index', sub=d.category.slug)) }}
+  {% endif %}
+</div>
+{% endblock %}

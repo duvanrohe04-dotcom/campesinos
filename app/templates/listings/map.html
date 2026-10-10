@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "components/icons.html" import ui %}
+{% block title %}Mapa de anuncios{% if info.root %} · {{ info.root.name }}{% endif %} · {{ config.SITE_NAME }}{% endblock %}
+{% block description %}Mira en un mapa dónde están los anuncios de animales, cosechas e insumos en la provincia de Vélez. Las ubicaciones son aproximadas.{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/map.js') }}" defer></script>{% endblock %}
+{% block content %}
+<div class="container-page mt-5">
+  <div class="flex items-center justify-between gap-3 flex-wrap">
+    <h1 class="!text-2xl lg:!text-3xl">Anuncios en el mapa</h1>
+    <a class="btn btn-outline btn-sm" href="{{ url_for('listings.index', **clean_args) }}">{{ ui('grid', 'w-4 h-4') }}Ver como lista</a>
+  </div>
+  <p class="text-tierra-600 mt-1" id="map-count" role="status">Cargando mapa…</p>
+
+  <div class="mt-3 flex flex-wrap items-center gap-2">
+    <span class="font-bold text-sm">Cerca de mí:</span>
+    {% for km in (5, 10, 25) %}
+    <button type="button" class="btn btn-outline btn-sm" data-near-url="{{ url_for('listings.map_view', **clean_args) }}" data-radius="{{ km }}">{{ ui('pin', 'w-4 h-4') }}{{ km }} km</button>
+    {% endfor %}
+  </div>
+  {% if chips %}
+  <ul class="flex flex-wrap gap-2 mt-3" aria-label="Filtros activos">
+    {% for label, remove_url in chips %}<li><a class="chip chip-active no-underline" href="{{ remove_url }}" aria-label="Quitar filtro {{ label }}">{{ label }}{{ ui('x', 'w-4 h-4') }}</a></li>{% endfor %}
+  </ul>{% endif %}
+
+  <div id="map" class="mt-4 w-full h-[65vh] min-h-[22rem] rounded-2xl border border-tierra-300 bg-tierra-100 overflow-hidden"
+       data-url="{{ url_for('listings.map_data', **clean_args) }}" data-center="[{{ center[0] }}, {{ center[1] }}]"
+       {% if info.near %}data-near="{{ info.near[0] }},{{ info.near[1] }}" data-radius="{{ info.radius }}"{% endif %}
+       role="application" aria-label="Mapa de anuncios"></div>
+  <p class="help mt-2">Las ubicaciones son <strong>aproximadas</strong>: nunca mostramos el punto exacto de una finca. Si un anuncio no tiene punto, usamos el centro de su vereda o municipio.</p>
+  <noscript><p class="alert alert-info mt-3">Para ver el mapa necesitas activar JavaScript. Mientras tanto usa la <a href="{{ url_for('listings.index', **clean_args) }}">lista de anuncios</a>.</p></noscript>
+</div>
+{% endblock %}

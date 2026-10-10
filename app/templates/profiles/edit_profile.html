@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% from "components/forms.html" import wtf_field, village_select %}
+{% from "components/cards.html" import avatar %}
+{% from "components/icons.html" import ui %}
+{% block title %}Mi perfil · {{ config.SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="container-page max-w-md mt-6">
+  <h1>Mi perfil</h1>
+  <p class="text-tierra-600 mb-4">Celular: <strong>{{ current_user.phone }}</strong></p>
+  <form method="post" enctype="multipart/form-data" class="card p-5" novalidate>
+    {{ form.hidden_tag() }}
+    <div class="flex items-center gap-4 mb-4">
+      {{ avatar(current_user, "w-20 h-20", "text-3xl") }}
+      <div class="min-w-0 flex-1"><label class="label" for="photo">{{ form.photo.label.text }}</label>
+        <input class="input !py-2" type="file" id="photo" name="photo" accept="image/*">
+        {% if current_user.photo %}<label class="flex items-center gap-2 mt-2 text-sm font-bold">{{ form.remove_photo(class_="w-5 h-5 accent-primary-700") }} {{ form.remove_photo.label.text }}</label>{% endif %}</div>
+    </div>
+    {{ wtf_field(form.name) }}
+    {{ wtf_field(form.farm_name, "Ej: Finca La Esperanza") }}
+    {{ wtf_field(form.email, "Sirve para recuperar tu cuenta si olvidas la contraseña.", "nombre@gmail.com", "email", "email") }}
+    {% if current_user.email %}
+    <p class="-mt-2 mb-4 text-sm font-bold {{ 'text-primary-700' if current_user.email_verified else 'text-sol-700' }}">
+      {% if current_user.email_verified %}{{ ui('check', 'w-4 h-4 inline') }} Correo verificado
+      {% else %}Correo sin verificar · <a href="{{ url_for('auth.verify_email') }}">Verificarlo ahora</a>{% endif %}</p>
+    {% endif %}
+    <div class="mb-4">
+      <label class="label" for="municipality_id">{{ form.municipality_id.label.text }}</label>
+      {{ form.municipality_id(class_="input" ~ (" input-error" if form.municipality_id.errors else "")) }}
+      {% for e in form.municipality_id.errors %}<p class="error-text" role="alert">{{ e }}</p>{% endfor %}
+    </div>
+    {{ village_select('village_id', villages, 'municipality_id', values.village_id, values.village_other, errors.get('village_other', '')) }}
+    <div class="mb-4"><label class="label" for="bio">{{ form.bio.label.text }}</label>
+      {{ form.bio(class_="input", rows=4, maxlength=500, placeholder="Ej: Cultivo guayaba hace 15 años…") }}
+      <p class="help">Qué produces, hace cuánto, cómo entregas.</p>
+      {% for e in form.bio.errors %}<p class="error-text" role="alert">{{ e }}</p>{% endfor %}</div>
+    <button class="btn btn-primary btn-lg w-full" type="submit">Guardar</button>
+  </form>
+  <p class="text-center mt-5"><a class="font-bold" href="{{ url_for('profiles.account') }}">Mi cuenta y mis datos</a></p>
+</div>
+{% endblock %}

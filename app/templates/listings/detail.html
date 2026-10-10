@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% from "components/icons.html" import ui, cat_icon %}
+{% from "components/buttons.html" import whatsapp_button, call_button, speak_button %}
+{% from "components/badges.html" import ad_badge, negotiable_badge, sold_badge, status_badge, verified_seller_badge, email_verified_badge, stars %}
+{% from "components/cards.html" import listing_card, price_text, avatar %}
+{% from "components/alerts.html" import ica_notice %}
+
+{% block title %}{{ l.title }} en {{ l.municipality.name }}{% if l.price is not none %} · {{ l.price|cop }}{% endif %} · {{ config.SITE_NAME }}{% endblock %}
+{% block description %}{{ AD_TYPES[l.ad_type] }}: {{ l.title }}{% if l.price is not none %} por {{ l.price|cop }}{% if l.price_unit %} / {{ l.price_unit }}{% endif %}{% endif %} en {{ l.location_text }}. Contacta directo al vendedor por WhatsApp.{% endblock %}
+
+{% block head %}
+  <link rel="canonical" href="{{ listing_url(l, external=True) }}">
+  <meta property="og:type" content="product">
+  <meta property="og:title" content="{{ l.title }}{% if l.price is not none %} · {{ l.price|cop }}{% endif %}">
+  <meta property="og:description" content="{{ l.location_text }} · {{ AD_TYPES[l.ad_type] }}">
+  <meta property="og:url" content="{{ listing_url(l, external=True) }}">
+  {% if l.main_image %}<meta property="og:image" content="{{ url_for('static', filename='uploads/' ~ l.main_image.filename, _external=True) }}">{% endif %}
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ l.title }}">
+  <meta name="twitter:description" content="{{ l.location_text }}{% if l.price is not none %} · {{ l.price|cop }}{% endif %}">
+  <script type="application/ld+json">{{ {
+    "@context": "https://schema.org", "@type": "Product", "name": l.title,
+    "description": (l.description or l.title)[:300],
+    "category": l.category.root.name,
+    "image": [url_for('static', filename='uploads/' ~ l.main_image.filename, _external=True)] if l.main_image else [],
+    "offers": {"@type": "Offer", "priceCurrency": "COP", "price": l.price if l.price is not none else 0,
+               "availability": "https://schema.org/InStock" if l.status == 'active' else "https://schema.org/SoldOut",
+               "url": listing_url(l, external=True),
+               "seller": {"@type": "Person", "name": l.user.name}},
+    "areaServed": l.location_text} | tojson }}</script>
+{% endblock %}
+
+{% block bottom_nav %}{% endblock %}
+{% block scripts %}{% if map_point %}<script src="{{ url_for('static', filename='js/map.js') }}" defer></script>{% endif %}{% endblock %}
+
+{% block content %}
+{% set can_contact = l.status == 'active' and not is_owner %}
+<div class="container-page mt-4">
+  <nav class="text-sm mb-3 flex flex-wrap items-center gap-1 text-tierra-600" aria-label="Ruta">
+    <a href="{{ url_for('main.home') }}">Inicio</a> › <a href="{{ url_for('listings.index', cat=l.category.root.slug) }}">{{ l.category.root.name }}</a>
+    {% if l.category.parent %}› <a href="{{ url_for('listings.index', sub=l.category.slug) }}">{{ l.category.name }}</a>{% endif %}
+  </nav>
+
+  {% if l.status != 'active' %}
+  <div class="alert alert-info mb-3" role="status">{{ ui('info', 'w-6 h-6 shrink-0') }}<div>
+    {% if l.status == 'sold' %}Este anuncio ya se vendió.{% else %}Este anuncio está {{ STATUSES[l.status]|lower }} y solo tú puedes verlo.{% endif %}</div></div>
+  {% endif %}
+
+  <div class="lg:grid lg:grid-cols-[1.2fr_1fr] lg:gap-8">
+    {# ---------- Galería con swipe ---------- #}
+    <div>
+      {% if l.images %}
+      <div class="gallery" tabindex="0" aria-label="Fotos del anuncio. Desliza para ver más.">
+        {% for im in l.images %}
+        <img src="{{ url_for('static', filename='uploads/' ~ im.filename) }}" alt="{{ l.title }}, foto {{ loop.index }} de {{ l.images|length }}"
+             width="1200" height="900" class="aspect-[4/3] object-cover" {% if not loop.first %}loading="lazy"{% endif %} decoding="async">
+        {% endfor %}
+      </div>
+      {% if l.images|length > 1 %}<p class="text-center text-sm text-tierra-600 mt-2">Desliza para ver las {{ l.images|length }} fotos →</p>{% endif %}
+      {% for im in l.images if im.credit %}<p class="text-xs text-tierra-600 mt-1">{% if im.credit_url %}<a href="{{ im.credit_url }}" rel="noopener nofollow" target="_blank" class="text-tierra-600">{{ im.credit }}</a>{% else %}{{ im.credit }}{% endif %}</p>{% endfor %}
+      {% else %}
+      <div class="aspect-[4/3] rounded-2xl bg-primary-50 grid place-items-center text-primary-300">{{ cat_icon(l.category.icon, 'w-32 h-32') }}</div>
+      {% endif %}
+    </div>
+
+    <div class="mt-4 lg:mt-0">
+      <div class="flex flex-wrap gap-2 items-center">
+        {{ ad_badge(l.ad_type) }}{% if l.negotiable %}{{ negotiable_badge() }}{% endif %}{% if l.status == 'sold' %}{{ sold_badge() }}{% endif %}
+      </div>
+      <h1 class="mt-2 !text-2xl lg:!text-3xl">{{ l.title }}</h1>
+      <p class="mt-2 text-3xl font-extrabold text-primary-800 leading-none">
+        {% if l.price is none %}A convenir{% else %}{{ l.price|cop }}{% if l.price_unit and l.price_unit != 'a convenir' %}<span class="text-lg font-semibold text-tierra-600"> / {{ l.price_unit }}</span>{% endif %}{% endif %}
+      </p>
+      <p class="mt-3 flex items-center gap-2 text-tierra-700">{{ ui('pin', 'w-5 h-5') }}{{ l.location_text }}</p>
+      <div class="mt-3">{{ speak_button(l.title ~ '. ' ~ ('Precio a convenir' if l.price is none else 'Precio ' ~ l.price ~ ' pesos' ~ (' por ' ~ l.price_unit if l.price_unit and l.price_unit != 'a convenir' else '')) ~ '. Ubicación: ' ~ l.location_text ~ '. ' ~ (l.description or '') ~ ' ' ~ (attrs|map('join', ': ')|join('. ')), 'Escuchar este anuncio') }}</div>
+      <p class="mt-1 flex items-center gap-2 text-sm text-tierra-600">{{ ui('clock', 'w-5 h-5') }}Publicado {{ l.created_at|timeago }} · {{ ui('eye', 'w-5 h-5') }}{{ l.views_count }} {{ 'vista' if l.views_count == 1 else 'vistas' }}</p>
+
+      {% if can_contact %}
+      <div class="hidden lg:grid gap-3 mt-5">
+        {{ whatsapp_button(url_for('listings.contact_whatsapp', listing_id=l.id)) }}
+        {{ call_button(url_for('listings.contact_phone', listing_id=l.id)) }}
+      </div>
+      {% elif is_owner %}
+      <div class="mt-5 flex gap-2"><a class="btn btn-outline" href="{{ url_for('profiles.edit_listing', listing_id=l.id) }}">{{ ui('edit', 'w-5 h-5') }}Editar</a>
+        <a class="btn btn-ghost" href="{{ url_for('profiles.panel') }}">Mi panel</a></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="lg:grid lg:grid-cols-[1.2fr_1fr] lg:gap-8 mt-6">
+    <div class="space-y-6">
+      {# ---------- Ficha ---------- #}
+      <section class="card p-4" aria-labelledby="ficha">
+        <h2 id="ficha" class="!text-xl mb-3">Ficha del anuncio</h2>
+        <table class="w-full text-base">
+          <tbody class="divide-y divide-tierra-200">
+            <tr><th scope="row" class="text-left font-semibold text-tierra-600 py-2 pr-3 w-1/2">Categoría</th><td class="py-2 font-bold">{{ l.category.root.name }}{% if l.category.parent %} · {{ l.category.name }}{% endif %}</td></tr>
+            {% for label, value in attrs %}
+            <tr><th scope="row" class="text-left font-semibold text-tierra-600 py-2 pr-3">{{ label }}</th><td class="py-2 font-bold">{{ value }}</td></tr>
+            {% endfor %}
+            {% if l.quantity %}<tr><th scope="row" class="text-left font-semibold text-tierra-600 py-2 pr-3">Cantidad</th><td class="py-2 font-bold">{{ l.quantity }}</td></tr>{% endif %}
+            {% if l.available_from %}<tr><th scope="row" class="text-left font-semibold text-tierra-600 py-2 pr-3">Disponible desde</th><td class="py-2 font-bold">{{ l.available_from.strftime('%d/%m/%Y') }}</td></tr>{% endif %}
+            <tr><th scope="row" class="text-left font-semibold text-tierra-600 py-2 pr-3">Ubicación</th><td class="py-2 font-bold">{{ l.location_text }}</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      {% if l.description %}
+      <section aria-labelledby="desc"><h2 id="desc" class="!text-xl mb-2">Descripción</h2>
+        <p class="whitespace-pre-line text-lg leading-relaxed">{{ l.description }}</p></section>
+      {% endif %}
+
+      {% if map_point %}
+      <section class="card p-4" aria-labelledby="donde">
+        <h2 id="donde" class="!text-xl mb-2">Dónde está (zona aproximada)</h2>
+        <div id="listing-map" class="w-full h-56 rounded-xl bg-tierra-100 overflow-hidden" data-lat="{{ map_point[0] }}" data-lng="{{ map_point[1] }}" role="img" aria-label="Mapa de la zona aproximada de {{ l.location_text }}"></div>
+        <p class="help mt-2">{{ 'Zona marcada por el vendedor' if map_exact else 'Centro de ' ~ l.location_text }}. Por seguridad no mostramos el punto exacto; acuerda el lugar de encuentro con el vendedor.</p>
+      </section>
+      {% endif %}
+
+      {% if l.category.needs_ica %}{{ ica_notice() }}{% endif %}
+    </div>
+
+    <aside class="mt-6 lg:mt-0 space-y-4">
+      {# ---------- Vendedor ---------- #}
+      <section class="card p-4" aria-labelledby="vend">
+        <h2 id="vend" class="!text-lg mb-3">{{ 'Quien publica' if l.ad_type == 'compro' else 'Vendedor' }}</h2>
+        <div class="flex items-center gap-3">
+          {{ avatar(l.user) }}
+          <div class="min-w-0">
+            <p class="font-extrabold text-lg truncate">{{ l.user.name }}</p>
+            {% if l.user.farm_name %}<p class="text-sm text-tierra-600 truncate">{{ l.user.farm_name }}</p>{% endif %}
+            <p class="text-sm text-tierra-600">{{ l.user.location_text }}</p>
+            {% if can_contact %}<p class="flex items-center gap-1 mt-1 font-extrabold">{{ ui('phone', 'w-5 h-5') }}<span class="sr-only">Celular:</span>{{ l.user.phone|mask_phone }}
+              <a class="ml-1 text-sm" rel="nofollow" href="{{ url_for('listings.contact_phone', listing_id=l.id) }}">Ver celular</a></p>{% endif %}
+            <div class="flex flex-wrap gap-1 mt-1">{% if l.user.is_verified_seller %}{{ verified_seller_badge() }}{% endif %}{% if l.user.email_verified %}{{ email_verified_badge() }}{% endif %}</div>
+            {% if reputation.count %}<p class="flex items-center gap-1 text-sm mt-1">{{ stars(reputation.average, "w-4 h-4") }}<strong>{{ reputation.average }}</strong> ({{ reputation.count }})</p>{% endif %}
+          </div>
+        </div>
+        <a class="btn btn-outline w-full mt-3" href="{{ url_for('profiles.public', user_id=l.user.id) }}">Ver su perfil y más anuncios</a>
+        <a class="block text-center text-sm font-bold mt-2" href="{{ url_for('main.safety_tips') }}">Consejos para comprar seguro</a>
+      </section>
+      {% if l.status == 'active' and (is_owner or current_user.is_admin) %}
+      <section class="card p-4" aria-labelledby="compartir">
+        <h2 id="compartir" class="!text-lg !font-sans !font-extrabold mb-2">Comparte este anuncio</h2>
+        <div class="grid gap-2">
+          <a class="btn btn-outline btn-sm" href="{{ url_for('listings.poster_pdf', listing_id=l.id) }}">{{ ui('download', 'w-4 h-4') }}Cartel para imprimir (PDF)</a>
+          <a class="btn btn-outline btn-sm" href="{{ url_for('listings.status_image', listing_id=l.id) }}">{{ ui('image', 'w-4 h-4') }}Imagen para estados</a>
+        </div>
+      </section>
+      {% endif %}
+      <div class="flex flex-wrap gap-2">
+        {% if current_user.is_authenticated %}
+        <form method="post" action="{{ url_for('listings.toggle_favorite', listing_id=l.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="next" value="{{ listing_url(l) }}">
+          <button class="btn btn-outline btn-sm" type="submit">{{ ui('heart-fill' if is_fav else 'heart', 'w-5 h-5') }}{{ 'Quitar de favoritos' if is_fav else 'Guardar en favoritos' }}</button>
+        </form>
+        {% else %}
+        <a class="btn btn-outline btn-sm" href="{{ url_for('auth.login', next=listing_url(l)) }}">{{ ui('heart', 'w-5 h-5') }}Guardar en favoritos</a>
+        {% endif %}
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('listings.report', listing_id=l.id) }}">{{ ui('flag', 'w-5 h-5') }}Reportar</a>
+      </div>
+    </aside>
+  </div>
+
+  {% if similar %}
+  <section class="mt-10" aria-labelledby="sim">
+    <h2 id="sim" class="!text-2xl mb-4">Publicaciones similares</h2>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">{% for s in similar %}{{ listing_card(s) }}{% endfor %}</div>
+  </section>
+  {% endif %}
+</div>
+
+{# ---------- Barra fija en móvil: precio + contacto ---------- #}
+{% if can_contact %}
+<div class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-tierra-300 p-3 shadow-[0_-4px_12px_rgba(57,50,41,.12)]">
+  <p class="text-sm font-bold text-tierra-700 truncate mb-2">{% if l.price is none %}A convenir{% else %}<span class="text-primary-800 text-lg font-extrabold">{{ l.price|cop }}</span>{% if l.price_unit and l.price_unit != 'a convenir' %} / {{ l.price_unit }}{% endif %}{% endif %} · {{ l.title }}</p>
+  <div class="grid grid-cols-[1fr_auto] gap-2">
+    {{ whatsapp_button(url_for('listings.contact_whatsapp', listing_id=l.id), 'WhatsApp') }}
+    {{ call_button(url_for('listings.contact_phone', listing_id=l.id), 'Llamar', full=False) }}
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+
+
+
