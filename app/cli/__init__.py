@@ -5,6 +5,7 @@ from flask import Flask, current_app
 
 from ..extensions import db
 from ..models import User
+from ..services.backup import BackupError, backup_sqlite, sqlite_path
 from ..services.expiry import expire_listings
 from ..services.prices import update_snapshots
 from ..services.saved_searches import run_saved_searches
@@ -56,6 +57,19 @@ def register_cli(app: Flask) -> None:
     def update_prices_command() -> None:
         """Recalcula los precios de referencia y guarda el histórico de hoy (ejecutar con cron, una vez al día)."""
         click.echo(f"Precios actualizados: {update_snapshots()}")
+
+    @app.cli.command("backup-db")
+    def backup_db_command() -> None:
+        """Copia segura de la base SQLite a instance/backups (o BACKUP_DIR) y borra las viejas (una vez al día).
+        Con PostgreSQL no hace nada: allí las copias las hace pg_dump."""
+        try:
+            target, removed = backup_sqlite()
+        except BackupError as error:
+            if sqlite_path() is None:
+                click.echo(str(error))  # PostgreSQL / en memoria: se omite sin error
+                return
+            raise click.ClickException(str(error)) from None
+        click.echo(f"Copia lista: {target} ({target.stat().st_size // 1024} KB). Copias viejas borradas: {removed}")
 
     @app.cli.command("check-saved-searches")
     def check_saved_searches_command() -> None:

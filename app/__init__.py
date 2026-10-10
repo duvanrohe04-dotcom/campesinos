@@ -16,19 +16,29 @@ def _resolve_database_uri(app: Flask) -> str:
     return uri.replace("postgres://", "postgresql://", 1) if uri.startswith("postgres://") else uri
 
 
-def _enforce_sqlite_foreign_keys(app: Flask) -> None:
-    """SQLite ignora las llaves foráneas salvo que se pida (PostgreSQL siempre las exige). Solo si SQLITE_FOREIGN_KEYS.
+def _configure_sqlite(app: Flask) -> None:
+    """Ajustes de cada conexión a SQLite (no hacen nada con PostgreSQL).
 
-    No va activo en desarrollo por defecto: las migraciones por lotes de SQLite recrean tablas y fallan con ellas.
+    - busy_timeout: si otro proceso está escribiendo, espera en vez de fallar con «database is locked».
+    - WAL (SQLITE_WAL, activo en producción): lecturas y escritura a la vez entre los procesos de Gunicorn y las tareas
+      programadas. No va en desarrollo por defecto: crea archivos extra que OneDrive/antivirus pueden molestar.
+    - Llaves foráneas (SQLITE_FOREIGN_KEYS, solo pruebas): SQLite las ignora salvo que se pida, PostgreSQL siempre las
+      exige. No va en desarrollo: las migraciones por lotes de SQLite recrean tablas y fallan con ellas.
     """
-    if not (app.config.get("SQLITE_FOREIGN_KEYS") and app.config["SQLALCHEMY_DATABASE_URI"].startswith("sqlite")):
+    if not app.config["SQLALCHEMY_DATABASE_URI"].startswith("sqlite"):
         return
+    wal, foreign_keys = app.config.get("SQLITE_WAL"), app.config.get("SQLITE_FOREIGN_KEYS")
 
-    def enable(dbapi_connection, _record) -> None:
-        dbapi_connection.execute("PRAGMA foreign_keys=ON")
+    def configure(dbapi_connection, _record) -> None:
+        dbapi_connection.execute("PRAGMA busy_timeout=15000")
+        if wal:
+            dbapi_connection.execute("PRAGMA journal_mode=WAL")
+            dbapi_connection.execute("PRAGMA synchronous=NORMAL")
+        if foreign_keys:
+            dbapi_connection.execute("PRAGMA foreign_keys=ON")
 
     with app.app_context():
-        event.listen(db.engine, "connect", enable)
+        event.listen(db.engine, "connect", configure)
 
 
 def _register_blueprints(app: Flask) -> None:
@@ -78,7 +88,7 @@ def create_app(config=None) -> Flask:
         app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
     db.init_app(app)
-    _enforce_sqlite_foreign_keys(app)
+    _configure_sqlite(app)
     migrate.init_app(app, db, render_as_batch=app.config["SQLALCHEMY_DATABASE_URI"].startswith("sqlite"))
     login_manager.init_app(app)
     csrf.init_app(app)

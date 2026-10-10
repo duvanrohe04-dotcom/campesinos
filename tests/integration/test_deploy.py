@@ -90,7 +90,8 @@ def test_coolify_env_example_only_uses_variables_the_app_reads():
 
     root = _root()
     names = re.findall(r"^([A-Z][A-Z0-9_]+)=", (root / ".env.coolify.example").read_text(encoding="utf-8"), re.M)
-    assert {"SECRET_KEY", "DATABASE_URL", "ADMIN_PHONE", "ADMIN_PASSWORD", "MAIL_SERVER", "RUN_SCHEDULER"} <= set(names)
+    assert {"SECRET_KEY", "SQLITE_WAL", "ADMIN_PHONE", "ADMIN_PASSWORD", "MAIL_SERVER", "RUN_SCHEDULER"} <= set(names)
+    assert "DATABASE_URL" not in names  # el despliegue en Coolify usa SQLite: sin esa variable
     sources = "".join(
         (root / name).read_text(encoding="utf-8")
         for name in ("app/config.py", "gunicorn.conf.py", "entrypoint.sh", "app/__init__.py")
@@ -98,7 +99,7 @@ def test_coolify_env_example_only_uses_variables_the_app_reads():
     unknown = [name for name in names if name not in sources]
     assert not unknown, f"Variables que la app no lee (¿error de escritura?): {unknown}"
     guide = (root / "DEPLOY-COOLIFY.md").read_text(encoding="utf-8")
-    assert "Dockerfile" in guide and "/srv/app/static/uploads" in guide and "8000" in guide
+    assert "/srv/app/static/uploads" in guide and "/srv/instance" in guide and "8000" in guide and "SQLite" in guide
 
 
 def test_coolify_compose_declares_domain_and_reads_variables_from_the_ui():
@@ -109,21 +110,22 @@ def test_coolify_compose_declares_domain_and_reads_variables_from_the_ui():
     root = _root()
     raw = (root / "docker-compose.coolify.yml").read_text(encoding="utf-8")
     compose = yaml.safe_load(raw)
-    app, db = compose["services"]["app"], compose["services"]["db"]
-    assert "env_file" not in app and "env_file" not in db  # el archivo .env no existe en el servidor
+    assert list(compose["services"]) == ["app"]  # SQLite: no hay servicio de base de datos
+    app = compose["services"]["app"]
+    assert "env_file" not in app and "depends_on" not in app  # el archivo .env no existe en el servidor
     assert "ports" not in app and app["expose"] == ["8000"]  # el puerto lo enruta el proxy de Coolify
     env = app["environment"]
     assert "SERVICE_FQDN_APP_8000" in env  # esto es lo que hace aparecer el campo «Domains»
     pairs = dict(item.split("=", 1) for item in env if "=" in item)
     assert pairs["FLASK_ENV"] == "production" and pairs["PORT"] == "8000"
-    assert "@db:5432/" in pairs["DATABASE_URL"] and pairs["DATABASE_URL"].endswith("/campo")
+    assert "DATABASE_URL" not in pairs and pairs["SQLITE_WAL"] == "true"
     assert pairs["ADMIN_PHONE"].startswith("${ADMIN_PHONE:?") and pairs["ADMIN_PASSWORD"].startswith(
         "${ADMIN_PASSWORD:?"
     )
     assert pairs["SECRET_KEY"] == "${SERVICE_PASSWORD_64_FLASKSECRET}"
-    assert "uploads:/srv/app/static/uploads" in app["volumes"]
-    assert app["depends_on"]["db"]["condition"] == "service_healthy" and "healthcheck" in db
-    assert "$${POSTGRES_USER}" in db["healthcheck"]["test"][1]  # $$ para que Compose no lo sustituya
+    # La base (campo.db) y las fotos viven en volúmenes: sin ellos se pierden en cada despliegue
+    assert "data:/srv/instance" in app["volumes"] and "uploads:/srv/app/static/uploads" in app["volumes"]
+    assert set(compose["volumes"]) == {"data", "uploads"} and "healthcheck" in app
 
     sources = "".join(
         (root / name).read_text(encoding="utf-8")

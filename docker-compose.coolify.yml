@@ -1,8 +1,10 @@
-# Para COOLIFY con el Build Pack «Docker Compose».
+# Para COOLIFY con el Build Pack «Docker Compose». Base de datos: SQLite (un archivo en un volumen).
 #   Docker Compose Location:  /docker-compose.coolify.yml   (luego «Save» y «Reload Compose File»)
-# Coolify se encarga del dominio, el HTTPS y los secretos de la base de datos; por eso aquí no hay `ports:` ni `env_file:`.
+# Coolify se encarga del dominio y del HTTPS; por eso aquí no hay `ports:` ni `env_file:`.
 # Cada ${VARIABLE} de este archivo aparece en «Environment Variables»; las marcadas con :? son obligatorias.
-# Para desarrollo local usa docker-compose.yml, y para un VPS sin Coolify, docker-compose.prod.yml.
+# Para desarrollo local usa docker-compose.yml, y para un VPS sin Coolify, docker-compose.prod.yml (PostgreSQL).
+#
+# SQLite exige UN SOLO contenedor de la app: no subas las réplicas a más de 1.
 
 services:
   app:
@@ -17,9 +19,11 @@ services:
       - SERVICE_FQDN_APP_8000
       - FLASK_ENV=production
       - PORT=8000
-      # Se generan solos y se guardan: no cambian entre despliegues
+      # Se genera sola y se guarda: no cambia entre despliegues (si cambiara, se cerrarían las sesiones)
       - SECRET_KEY=${SERVICE_PASSWORD_64_FLASKSECRET}
-      - DATABASE_URL=postgresql://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@db:5432/campo
+      # Sin DATABASE_URL la app usa SQLite en /srv/instance/campo.db (el volumen «data»)
+      - SQLITE_WAL=true
+      - BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-14}
       # Obligatorias: tu usuario administrador
       - ADMIN_PHONE=${ADMIN_PHONE:?Escribe el celular del administrador (10 dígitos, empieza por 3)}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:?Escribe una contraseña larga para el administrador}
@@ -43,10 +47,10 @@ services:
       - LOG_TO_FILE=false
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - RATELIMIT_STORAGE_URI=${RATELIMIT_STORAGE_URI:-memory://}
-    depends_on:
-      db:
-        condition: service_healthy
     volumes:
+      # La base de datos (campo.db) y sus copias diarias (instance/backups)
+      - data:/srv/instance
+      # Las fotos de los anuncios
       - uploads:/srv/app/static/uploads
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
@@ -55,21 +59,6 @@ services:
       retries: 3
       start_period: 90s
 
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      - POSTGRES_USER=${SERVICE_USER_POSTGRES}
-      - POSTGRES_PASSWORD=${SERVICE_PASSWORD_POSTGRES}
-      - POSTGRES_DB=campo
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
 volumes:
+  data:
   uploads:
-  pgdata:

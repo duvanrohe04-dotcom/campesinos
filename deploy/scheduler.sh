@@ -13,6 +13,7 @@ while true; do
   fi
   if [ $((minute % 1440)) -eq 0 ]; then
     flask update-prices || echo "[$(date)] ERROR en update-prices"
+    flask backup-db || echo "[$(date)] ERROR en backup-db"  # SQLite: copia diaria; con PostgreSQL no hace nada
   fi
   minute=$((minute + 30))
   sleep 1800

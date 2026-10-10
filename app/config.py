@@ -51,6 +51,9 @@ class Config:
     # Vacío = SQLite en instance/campo.db (lo resuelve create_app)
     SQLALCHEMY_DATABASE_URI = env_str("DATABASE_URL") or None
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLITE_WAL = env_bool("SQLITE_WAL", False)  # modo WAL de SQLite (ver app/__init__.py); producción lo activa
+    BACKUP_DIR = env_str("BACKUP_DIR")  # vacío = instance/backups (flask backup-db)
+    BACKUP_RETENTION_DAYS = env_int("BACKUP_RETENTION_DAYS", 14)
     MAX_CONTENT_LENGTH = env_int("MAX_CONTENT_LENGTH", 40 * 1024 * 1024)
     UPLOAD_FOLDER = env_str("UPLOAD_FOLDER") or None  # por defecto app/static/uploads
     MAX_IMAGES = env_int("MAX_IMAGES", 6)
@@ -175,6 +178,7 @@ class TestingConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
+    SQLITE_WAL = env_bool("SQLITE_WAL", True)
     SESSION_COOKIE_SECURE = True
     REMEMBER_COOKIE_SECURE = True
     TRUST_PROXY = True
