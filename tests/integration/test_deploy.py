@@ -115,7 +115,8 @@ def test_coolify_compose_declares_domain_and_reads_variables_from_the_ui():
     assert "env_file" not in app and "depends_on" not in app  # el archivo .env no existe en el servidor
     assert "ports" not in app and app["expose"] == ["8000"]  # el puerto lo enruta el proxy de Coolify
     env = app["environment"]
-    assert "SERVICE_FQDN_APP_8000" in env  # esto es lo que hace aparecer el campo «Domains»
+    # Con SERVICE_FQDN_* Coolify inventa una dirección extra (…sslip.io); el dominio se escribe a mano con :8000
+    assert not [item for item in env if item.startswith(("SERVICE_FQDN", "SERVICE_URL"))]
     pairs = dict(item.split("=", 1) for item in env if "=" in item)
     assert pairs["FLASK_ENV"] == "production" and pairs["PORT"] == "8000"
     assert "DATABASE_URL" not in pairs and pairs["SQLITE_WAL"] == "true"

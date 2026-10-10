@@ -29,7 +29,8 @@ La base de datos es **SQLite**: un archivo (`campo.db`) en un volumen. No hay se
    - `MAIL_USERNAME`, `MAIL_PASSWORD` y `MAIL_FROM` (y `MAIL_SERVER` si no usas Gmail). Sin esto no llegan los códigos por correo.
    - Opcionales: `CONTACT_EMAIL`, `CONTACT_WHATSAPP`, `SITE_NAME`…
    - **No** pongas `SECRET_KEY` ni `DATABASE_URL`: la clave la genera Coolify y, sin `DATABASE_URL`, la app usa SQLite.
-3. **Domains** (servicio `app`): ver la sección siguiente.
+3. **Domains** (servicio `app`): escribe `https://tu-dominio.com:8000`. El `:8000` es el puerto interno del contenedor para que Coolify sepa a dónde
+   enviar el tráfico; en el navegador la dirección es simplemente `https://tu-dominio.com`.
 4. **Persistent Storage:** deben aparecer **dos volúmenes**:
    - `data` → `/srv/instance` (la base de datos y sus copias),
    - `uploads` → `/srv/app/static/uploads` (las fotos).
@@ -37,11 +38,11 @@ La base de datos es **SQLite**: un archivo (`campo.db`) en un volumen. No hay se
    Sin ellos, **la base y las fotos se pierden en cada despliegue**.
 5. **Deploy.**
 
-### «Me aparecen dos links» (el tuyo y otro)
-El otro es una dirección temporal de Coolify (termina en `.sslip.io`) que genera solo para el servicio. En el campo **Domains** del servicio `app`:
-deja **solo el tuyo** (`https://tu-dominio.com`) y borra el de `sslip.io`, luego **Save** y **Deploy** otra vez.
-Si ambos están, la app responde en los dos: el tuyo es el que debes compartir. Las variables `SERVICE_FQDN_APP` y `SERVICE_URL_APP` que ves en la lista
-las crea Coolify automáticamente y se actualizan con el dominio; no las edites.
+### «Me aparecen dos links» (el tuyo y otro de `…sslip.io`)
+La dirección `sslip.io` era una dirección temporal que Coolify creaba sola porque una versión anterior de `docker-compose.coolify.yml` declaraba
+`SERVICE_FQDN_APP_8000`. Esa línea ya no está. Después de subir el cambio: **Reload Compose File**, revisa que en **Domains** solo esté el tuyo,
+**Save** y **Deploy**. Si el link viejo sigue saliendo, busca en **Environment Variables** las variables `SERVICE_FQDN_APP_8000` y `SERVICE_URL_APP_8000`
+(las crea Coolify) y bórralas. Esa dirección no tiene HTTPS válido: por ahí no se puede iniciar sesión.
 
 ## Qué pasa al arrancar
 El contenedor, solo: aplica migraciones → carga categorías, municipios y el administrador (sin datos de ejemplo) → inicia las tareas programadas

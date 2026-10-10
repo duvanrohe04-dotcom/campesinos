@@ -1,6 +1,7 @@
 # Para COOLIFY con el Build Pack «Docker Compose». Base de datos: SQLite (un archivo en un volumen).
 #   Docker Compose Location:  /docker-compose.coolify.yml   (luego «Save» y «Reload Compose File»)
 # Coolify se encarga del dominio y del HTTPS; por eso aquí no hay `ports:` ni `env_file:`.
+# Dominio: en «Domains» del servicio app escribe  https://tu-dominio.com:8000  (el :8000 es el puerto interno; no se ve en la URL).
 # Cada ${VARIABLE} de este archivo aparece en «Environment Variables»; las marcadas con :? son obligatorias.
 # Para desarrollo local usa docker-compose.yml, y para un VPS sin Coolify, docker-compose.prod.yml (PostgreSQL).
 #
@@ -15,8 +16,8 @@ services:
     expose:
       - "8000"
     environment:
-      # Coolify crea el campo «Domains» para este servicio y enruta el dominio al puerto 8000
-      - SERVICE_FQDN_APP_8000
+      # No se declara SERVICE_FQDN_*: esa variable hace que Coolify invente una dirección extra (…sslip.io).
+      # El dominio se escribe a mano en «Domains» del servicio app, con el puerto: https://tu-dominio.com:8000
       - FLASK_ENV=production
       - PORT=8000
       # Se genera sola y se guarda: no cambia entre despliegues (si cambiara, se cerrarían las sesiones)
