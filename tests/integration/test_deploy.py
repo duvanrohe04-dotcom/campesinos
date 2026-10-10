@@ -101,6 +101,40 @@ def test_coolify_env_example_only_uses_variables_the_app_reads():
     assert "Dockerfile" in guide and "/srv/app/static/uploads" in guide and "8000" in guide
 
 
+def test_coolify_compose_declares_domain_and_reads_variables_from_the_ui():
+    import re
+
+    import yaml
+
+    root = _root()
+    raw = (root / "docker-compose.coolify.yml").read_text(encoding="utf-8")
+    compose = yaml.safe_load(raw)
+    app, db = compose["services"]["app"], compose["services"]["db"]
+    assert "env_file" not in app and "env_file" not in db  # el archivo .env no existe en el servidor
+    assert "ports" not in app and app["expose"] == ["8000"]  # el puerto lo enruta el proxy de Coolify
+    env = app["environment"]
+    assert "SERVICE_FQDN_APP_8000" in env  # esto es lo que hace aparecer el campo «Domains»
+    pairs = dict(item.split("=", 1) for item in env if "=" in item)
+    assert pairs["FLASK_ENV"] == "production" and pairs["PORT"] == "8000"
+    assert "@db:5432/" in pairs["DATABASE_URL"] and pairs["DATABASE_URL"].endswith("/campo")
+    assert pairs["ADMIN_PHONE"].startswith("${ADMIN_PHONE:?") and pairs["ADMIN_PASSWORD"].startswith(
+        "${ADMIN_PASSWORD:?"
+    )
+    assert pairs["SECRET_KEY"] == "${SERVICE_PASSWORD_64_FLASKSECRET}"
+    assert "uploads:/srv/app/static/uploads" in app["volumes"]
+    assert app["depends_on"]["db"]["condition"] == "service_healthy" and "healthcheck" in db
+    assert "$${POSTGRES_USER}" in db["healthcheck"]["test"][1]  # $$ para que Compose no lo sustituya
+
+    sources = "".join(
+        (root / name).read_text(encoding="utf-8")
+        for name in ("app/config.py", "gunicorn.conf.py", "entrypoint.sh", "app/__init__.py")
+    )
+    names = [item.split("=", 1)[0] for item in env if "=" in item]
+    unknown = [name for name in names if name not in sources and name != "PORT"]
+    assert not unknown, f"Variables que la app no lee: {unknown}"
+    assert re.search(r"docker-compose\.coolify\.yml", (root / "DEPLOY-COOLIFY.md").read_text(encoding="utf-8"))
+
+
 def test_ssh_deploy_job_is_opt_in_so_coolify_users_get_no_red_builds():
     workflow = (_root() / ".github/workflows/ci.yml").read_text(encoding="utf-8")
     assert "vars.USE_SSH_DEPLOY == 'true'" in workflow

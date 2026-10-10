@@ -1,0 +1,75 @@
+# Para COOLIFY con el Build Pack «Docker Compose».
+#   Docker Compose Location:  /docker-compose.coolify.yml   (luego «Save» y «Reload Compose File»)
+# Coolify se encarga del dominio, el HTTPS y los secretos de la base de datos; por eso aquí no hay `ports:` ni `env_file:`.
+# Cada ${VARIABLE} de este archivo aparece en «Environment Variables»; las marcadas con :? son obligatorias.
+# Para desarrollo local usa docker-compose.yml, y para un VPS sin Coolify, docker-compose.prod.yml.
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    expose:
+      - "8000"
+    environment:
+      # Coolify crea el campo «Domains» para este servicio y enruta el dominio al puerto 8000
+      - SERVICE_FQDN_APP_8000
+      - FLASK_ENV=production
+      - PORT=8000
+      # Se generan solos y se guardan: no cambian entre despliegues
+      - SECRET_KEY=${SERVICE_PASSWORD_64_FLASKSECRET}
+      - DATABASE_URL=postgresql://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@db:5432/campo
+      # Obligatorias: tu usuario administrador
+      - ADMIN_PHONE=${ADMIN_PHONE:?Escribe el celular del administrador (10 dígitos, empieza por 3)}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?Escribe una contraseña larga para el administrador}
+      # Correo saliente (códigos de verificación y «olvidé mi contraseña»). Con MAIL_BACKEND=console no se envía nada.
+      - MAIL_BACKEND=${MAIL_BACKEND:-smtp}
+      - MAIL_SERVER=${MAIL_SERVER:-smtp.gmail.com}
+      - MAIL_PORT=${MAIL_PORT:-587}
+      - MAIL_USE_TLS=${MAIL_USE_TLS:-true}
+      - MAIL_USERNAME=${MAIL_USERNAME:-}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-}
+      - MAIL_FROM=${MAIL_FROM:-}
+      # Sitio y contacto
+      - SITE_NAME=${SITE_NAME:-Campo Directo}
+      - SITE_REGION=${SITE_REGION:-Vélez, Santander, Colombia}
+      - CONTACT_EMAIL=${CONTACT_EMAIL:-contacto@campodirecto.example}
+      - CONTACT_WHATSAPP=${CONTACT_WHATSAPP:-}
+      - LEGAL_VERSION=${LEGAL_VERSION:-2026-10-borrador}
+      # Operación
+      - RUN_SCHEDULER=true
+      - WEB_CONCURRENCY=${WEB_CONCURRENCY:-2}
+      - LOG_TO_FILE=false
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - RATELIMIT_STORAGE_URI=${RATELIMIT_STORAGE_URI:-memory://}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - uploads:/srv/app/static/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 30s
+      timeout: 6s
+      retries: 3
+      start_period: 90s
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${SERVICE_USER_POSTGRES}
+      - POSTGRES_PASSWORD=${SERVICE_PASSWORD_POSTGRES}
+      - POSTGRES_DB=campo
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  uploads:
+  pgdata:
