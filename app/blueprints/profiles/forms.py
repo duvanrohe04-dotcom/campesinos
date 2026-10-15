@@ -2,7 +2,7 @@
 from flask_login import current_user
 from flask_wtf.file import FileField
 from wtforms import BooleanField, IntegerField, PasswordField, RadioField, SelectField, StringField, TextAreaField
-from wtforms.validators import DataRequired, Length, Optional, ValidationError
+from wtforms.validators import DataRequired, EqualTo, Length, Optional, ValidationError
 
 from ...constants import (
     BIO_MAX,
@@ -10,6 +10,8 @@ from ...constants import (
     FARM_NAME_MAX,
     NAME_MAX,
     NAME_MIN,
+    PASSWORD_MAX,
+    PASSWORD_MIN,
     RATING_COMMENT_MAX,
     RATING_MAX,
     RATING_MIN,
@@ -45,6 +47,24 @@ class DeleteAccountForm(BaseForm):
     confirm = BooleanField(
         "Entiendo que se borran mis anuncios y que esto no se puede deshacer",
         validators=[DataRequired("Marca la casilla para confirmar.")],
+    )
+
+
+class ChangePasswordForm(BaseForm):
+    current_password = PasswordField("Tu contraseña actual", validators=[DataRequired("Escribe tu contraseña actual.")])
+    password = PasswordField(
+        "Contraseña nueva",
+        validators=[
+            DataRequired("Escribe tu contraseña nueva."),
+            Length(PASSWORD_MIN, PASSWORD_MAX, f"Mínimo {PASSWORD_MIN} letras o números."),
+        ],
+    )
+    confirm = PasswordField(
+        "Repite la contraseña nueva",
+        validators=[
+            DataRequired("Repite la contraseña nueva."),
+            EqualTo("password", "Las contraseñas no son iguales."),
+        ],
     )
 
 

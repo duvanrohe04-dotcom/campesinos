@@ -26,7 +26,7 @@ services:
       - SQLITE_WAL=true
       - BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-14}
       # Obligatorias: tu usuario administrador
-      - ADMIN_PHONE=${ADMIN_PHONE:?Escribe el celular del administrador (10 dígitos, empieza por 3)}
+      - ADMIN_PHONE=${ADMIN_PHONE:?Escribe el usuario del administrador (por ejemplo admin, o un celular de 10 dígitos)}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:?Escribe una contraseña larga para el administrador}
       # Correo saliente (códigos de verificación y «olvidé mi contraseña»). Con MAIL_BACKEND=console no se envía nada.
       - MAIL_BACKEND=${MAIL_BACKEND:-smtp}

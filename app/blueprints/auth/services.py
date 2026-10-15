@@ -42,9 +42,20 @@ def register_user(form) -> User:
     return user
 
 
+def find_login_user(identifier: str | None) -> User | None:
+    """La cuenta que corresponde a lo escrito en «Celular». Las personas entran con su celular; solo un
+    administrador puede tener un usuario escrito (p. ej. «admin»), que se compara sin importar mayúsculas."""
+    phone = normalize_phone(identifier)
+    if phone:
+        return User.by_phone(phone)
+    alias = (identifier or "").strip().lower()
+    user = User.by_phone(alias)
+    return user if user and user.is_admin else None
+
+
 def authenticate(phone_raw: str, password: str) -> tuple[LoginResult, User | None]:
     """Valida credenciales llevando la cuenta de intentos fallidos y el bloqueo temporal."""
-    user = User.by_phone(normalize_phone(phone_raw))
+    user = find_login_user(phone_raw)
     if user and user.is_locked():
         return LoginResult.LOCKED, None
     if user and user.check_password(password):

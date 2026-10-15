@@ -238,6 +238,15 @@ def update_profile(user: User, form, upload=None) -> str | None:
     return None
 
 
+def change_password(user: User, current_password: str, new_password: str) -> bool:
+    """Cambia la contraseña si la actual es correcta. Devuelve False si la actual no coincide."""
+    if not user.check_password(current_password):
+        return False
+    user.set_password(new_password)
+    db.session.commit()
+    return True
+
+
 def get_public_seller(user_id: int) -> User | None:
     """La persona si tiene perfil público: cuenta activa y que no sea de administración."""
     seller = db.session.get(User, user_id)

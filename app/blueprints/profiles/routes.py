@@ -11,7 +11,7 @@ from ...services import account as account_service
 from ...services import ratings
 from ...utils import whatsapp_url
 from . import bp, services
-from .forms import DeleteAccountForm, ListingForm, ProfileForm, RatingForm
+from .forms import ChangePasswordForm, DeleteAccountForm, ListingForm, ProfileForm, RatingForm
 
 INVALID_FORM_MESSAGE = "Revisa los datos marcados en rojo."
 
@@ -125,6 +125,20 @@ def edit_profile():
         municipalities=Municipality.ordered(),
         villages=Village.ordered(),
     )
+
+
+# ---------- Cambiar la contraseña ----------
+@bp.route("/panel/contrasena", methods=["GET", "POST"])
+@login_required
+@limiter.limit(lambda: current_app.config["ACCOUNT_RATE_LIMIT"], methods=["POST"])
+def change_password():
+    form = ChangePasswordForm()
+    if form.validate_on_submit():
+        if services.change_password(current_user, form.current_password.data, form.password.data):
+            flash("Listo: tu contraseña nueva ya está activa.", "success")
+            return redirect(url_for("profiles.panel"))
+        form.current_password.errors.append("Esa no es tu contraseña actual.")
+    return render_template("profiles/change_password.html", form=form)
 
 
 # ---------- Perfil público del vendedor ----------

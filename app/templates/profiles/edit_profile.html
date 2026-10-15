@@ -35,6 +35,7 @@
       {% for e in form.bio.errors %}<p class="error-text" role="alert">{{ e }}</p>{% endfor %}</div>
     <button class="btn btn-primary btn-lg w-full" type="submit">Guardar</button>
   </form>
-  <p class="text-center mt-5"><a class="font-bold" href="{{ url_for('profiles.account') }}">Mi cuenta y mis datos</a></p>
+  <p class="text-center mt-5"><a class="font-bold" href="{{ url_for('profiles.change_password') }}">Cambiar mi contraseña</a></p>
+  <p class="text-center mt-3"><a class="font-bold" href="{{ url_for('profiles.account') }}">Mi cuenta y mis datos</a></p>
 </div>
 {% endblock %}

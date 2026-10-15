@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from flask import current_app
 
+from ..constants import PHONE_MAX
 from ..extensions import db
 from ..models import Article, AttributeDef, Category, Event, Listing, Municipality, Rating, User, Village
 from ..utils import slugify, utcnow
@@ -62,13 +63,21 @@ class SeedConfigError(RuntimeError):
     """Falta una variable de entorno necesaria para cargar los datos."""
 
 
+def admin_login() -> str:
+    """Usuario del administrador (ADMIN_PHONE): un celular o una palabra como «admin», siempre en minúsculas."""
+    return (current_app.config.get("ADMIN_PHONE") or "").strip().lower()
+
+
 def seed_admin() -> bool:
     """Crea el administrador con ADMIN_PHONE y ADMIN_PASSWORD del entorno. Si no están definidos, no hace nada.
     Devuelve si se creó."""
     cfg = current_app.config
-    phone, password = cfg.get("ADMIN_PHONE"), cfg.get("ADMIN_PASSWORD")
+    phone, password = admin_login(), cfg.get("ADMIN_PASSWORD")
     if not (phone and password):
         current_app.logger.warning("ADMIN_PHONE/ADMIN_PASSWORD no definidos: no se creó administrador.")
+        return False
+    if len(phone) > PHONE_MAX:
+        current_app.logger.error("ADMIN_PHONE debe tener máximo %s caracteres: no se creó administrador.", PHONE_MAX)
         return False
     if User.query.filter_by(phone=phone).first():
         return False
@@ -163,7 +172,7 @@ def seed_samples():
 
 def seed_articles() -> int:
     """Consejos iniciales (idempotente, por título). Autor: el administrador."""
-    admin = User.query.filter_by(phone=current_app.config["ADMIN_PHONE"]).first()
+    admin = User.query.filter_by(phone=admin_login()).first() if admin_login() else None
     created = 0
     for item in ARTICLES:
         if Article.query.filter_by(title=item["title"]).first():

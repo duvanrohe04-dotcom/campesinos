@@ -6,7 +6,7 @@ from flask import current_app
 from flask_login import UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from ..constants import EMAIL_MAX, ROLE_ADMIN, ROLE_SELLER, VILLAGE_OTHER_MAX
+from ..constants import EMAIL_MAX, PHONE_MAX, ROLE_ADMIN, ROLE_SELLER, VILLAGE_OTHER_MAX
 from ..extensions import db, login_manager
 from ..utils import place_text, utcnow
 
@@ -16,7 +16,7 @@ class User(UserMixin, db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
-    phone = db.Column(db.String(10), unique=True, nullable=False, index=True)
+    phone = db.Column(db.String(PHONE_MAX), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(256), nullable=False)
     role = db.Column(db.String(10), nullable=False, default=ROLE_SELLER)
     municipality_id = db.Column(db.Integer, db.ForeignKey("municipalities.id"), index=True)

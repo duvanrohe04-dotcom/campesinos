@@ -110,6 +110,7 @@ VERIFICATION_MAX_ATTEMPTS = 5
 VERIFICATION_RESEND_SECONDS = 60
 PURPOSE_VERIFY_EMAIL, PURPOSE_RESET_PASSWORD = "verify_email", "reset_password"
 EMAIL_MAX = 120
+PHONE_MAX = 10  # largo de users.phone: un celular colombiano, o el usuario escrito del administrador
 RESET_SESSION_KEY = "reset_phone"  # celular que pidió recuperar la clave (vive en la sesión, nunca en la URL)
 RATING_MIN, RATING_MAX = 1, 5
 RATING_COMMENT_MAX = 300
