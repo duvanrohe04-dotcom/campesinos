@@ -1,5 +1,6 @@
 """Atributos dinámicos por categoría: definiciones en BD, valores en Listing.attrs (JSON/JSONB)."""
 
+import math
 from collections.abc import Mapping
 from typing import Any
 
@@ -27,6 +28,8 @@ def _number(raw: str, d: AttributeDef, as_int: bool) -> int | float:
         value = parse_int(raw) if as_int else float(raw.replace(",", "."))
     except ValueError:
         raise ValueError("Escribe solo números.") from None
+    if not math.isfinite(value):
+        raise ValueError("Escribe solo números.")
     if d.min_value is not None and value < d.min_value:
         raise ValueError(f"Debe ser mínimo {d.min_value:g}.")
     if d.max_value is not None and value > d.max_value:

@@ -54,6 +54,8 @@ def toggle_user(user_id):
     user = _get_or_404(User, user_id)
     if user.id == current_user.id:
         flash("No puedes desactivar tu propia cuenta.", "error")
+    elif user.deleted_at:
+        flash("Esa cuenta fue eliminada por su dueño y no se puede reactivar.", "error")
     else:
         enabled = services.toggle_user(user)
         flash(f"Cuenta {'activada' if enabled else 'desactivada'}.", "success")

@@ -12,7 +12,7 @@
     <div class="flex items-center gap-4 mb-4">
       {{ avatar(current_user, "w-20 h-20", "text-3xl") }}
       <div class="min-w-0 flex-1"><label class="label" for="photo">{{ form.photo.label.text }}</label>
-        <input class="input !py-2" type="file" id="photo" name="photo" accept="image/*">
+        <input class="input !py-2 w-full min-w-0 text-sm" type="file" id="photo" name="photo" accept="image/*">
         {% if current_user.photo %}<label class="flex items-center gap-2 mt-2 text-sm font-bold">{{ form.remove_photo(class_="w-5 h-5 accent-primary-700") }} {{ form.remove_photo.label.text }}</label>{% endif %}</div>
     </div>
     {{ wtf_field(form.name) }}

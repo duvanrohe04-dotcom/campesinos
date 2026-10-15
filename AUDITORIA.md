@@ -252,6 +252,21 @@ Decisiones que tomé (según el criterio que pediste): **correo** como canal de 
 - **Encargos y chat:** siguen sin existir; su flujo no tiene prueba. `AUDITORIA.md` §2 explica por qué recomiendo no construir un chat propio.
 - Las pruebas de flujo están en `tests/integration/test_flows.py` (flujos 1, 2, 3, 4 y 6) y `test_password_recovery.py` (flujo 7).
 
+## 10. Correcciones del 13 de octubre: «los formularios no se abren»
+
+Revisado en el navegador en vista de celular, con una comprobación automática de desbordes en cada pantalla. Hallazgos y arreglos:
+
+| Qué pasaba | Impacto | Arreglo |
+|---|---|---|
+| **`session_protection = "strong"`** (`app/extensions.py`): si cambiaba la IP o el navegador entre dos peticiones, Flask-Login cerraba la sesión **e ignoraba «recordarme»**. | Un celular que salta entre Wi-Fi, datos móviles y antenas quedaba fuera sin aviso; al tocar «Publicar» lo mandaba al login y parecía que el formulario «no abría». **Probablemente la causa principal.** | Ahora `"basic"`. Pruebas con una app sin contexto compartido (`test_session_stability.py`); con `strong` fallan, con `basic` pasan. |
+| **Service worker con caché «primero» y versión fija `v1`** (`sw.js`): los teléfonos que ya habían entrado seguían usando el JS y el CSS **viejos** para siempre, aunque la página nueva esperara los nuevos. | Formularios y campos nuevos (veredas «Otra», fotos de categorías) rotos o sin estilo en quienes ya conocían el sitio. | JS/CSS: red primero. Direcciones con `?v=<fecha del archivo>`. Versión `v2` (limpia la caché vieja). Páginas privadas (cuenta, contacto, login…) ya no se guardan en el teléfono. |
+| **El asistente de publicar ocultaba los pasos 2–4 siempre** y solo `publish.js` los mostraba (`input.css`). | Con señal floja, si ese archivo no cargaba, la persona veía el paso 1 y un botón muerto. | Los pasos solo se ocultan cuando el script arrancó (`data-wizard`); si no, se ve el formulario completo y a los 6 s aparece «El formulario no terminó de cargar» con botón «Volver a cargar» que borra copias viejas. |
+| «Mi panel» (vendedor) **se salía de la pantalla** en el celular (495 px en 375). | Había que desplazar de lado. | `min-w-0` en las tarjetas (`panel.html`). |
+| El aviso azul del **registro** y el del mapa sin JS se partían en columnas. | Texto ilegible en el celular. | Contenido envuelto en un `<span>`. |
+| El selector de foto de «Mi perfil» se salía de la tarjeta. | Botón cortado. | `w-full min-w-0`. |
+
+**Lo que NO pude comprobar:** el sitio ya desplegado en Coolify (no lo veo desde aquí) ni un teléfono real. Probé en un navegador de escritorio emulando un celular. El service worker nuevo se instala en la siguiente visita de cada teléfono.
+
 ## 8. Nota sobre el flujo de trabajo (ramas y commits)
 
 Pides ramas por fase y commits convencionales. En esta máquina **`git` no está instalado/en el PATH** (existe la carpeta `.git`, pero no el ejecutable),

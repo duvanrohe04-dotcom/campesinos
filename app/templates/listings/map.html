@@ -27,6 +27,6 @@
        {% if info.near %}data-near="{{ info.near[0] }},{{ info.near[1] }}" data-radius="{{ info.radius }}"{% endif %}
        role="application" aria-label="Mapa de anuncios"></div>
   <p class="help mt-2">Las ubicaciones son <strong>aproximadas</strong>: nunca mostramos el punto exacto de una finca. Si un anuncio no tiene punto, usamos el centro de su vereda o municipio.</p>
-  <noscript><p class="alert alert-info mt-3">Para ver el mapa necesitas activar JavaScript. Mientras tanto usa la <a href="{{ url_for('listings.index', **clean_args) }}">lista de anuncios</a>.</p></noscript>
+  <noscript><p class="alert alert-info mt-3"><span>Para ver el mapa necesitas activar JavaScript. Mientras tanto usa la <a href="{{ url_for('listings.index', **clean_args) }}">lista de anuncios</a>.</span></p></noscript>
 </div>
 {% endblock %}

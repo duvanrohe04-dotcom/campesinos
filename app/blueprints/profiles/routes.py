@@ -92,6 +92,8 @@ def listing_done(listing):
 def listing_action(listing, action):
     try:
         flash(services.perform_action(listing, action), "success")
+    except services.ActionBlockedError as error:
+        flash(str(error), "error")
     except ValueError:
         abort(404)
     return redirect(url_for("profiles.panel"))

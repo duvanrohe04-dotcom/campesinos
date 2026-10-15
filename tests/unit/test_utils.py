@@ -38,6 +38,20 @@ def test_is_safe_next_blocks_external_redirects():
     assert not is_safe_next("")
 
 
+def test_is_safe_next_blocks_backslash_and_control_characters():
+    # Los navegadores leen «/\evil.com» como «//evil.com»
+    assert not is_safe_next("/\\evil.com")
+    assert not is_safe_next("/panel\\..\\x")
+    assert not is_safe_next("/\t/evil.com")
+    assert not is_safe_next("/panel\r\nSet-Cookie: x=1")
+
+
+def test_parse_int_rejects_non_ascii_digits():
+    for raw in ("²", "١٢٣", "１２３"):
+        with pytest.raises(ValueError, match="solo números"):
+            parse_int(raw)
+
+
 def test_whatsapp_url_prefills_message():
     url = whatsapp_url("3101234567", "Hola, ¿sigue disponible?")
     assert url.startswith("https://wa.me/573101234567?text=") and "Hola" in url

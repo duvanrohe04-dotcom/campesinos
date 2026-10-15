@@ -16,7 +16,7 @@ from ...constants import (
     VILLAGE_OTHER_ID,
 )
 from ...extensions import db
-from ...models import Category, Listing, Municipality, User, Village
+from ...models import Category, Listing, Municipality, User, VerificationCode, Village
 from ...services import images, verification
 from ...services.attributes import defs_for
 from ...services.expiry import renew
@@ -155,8 +155,20 @@ def share_link(listing: Listing) -> tuple[str, str]:
     return url, "https://wa.me/?text=" + quote(f"Mira lo que ofrezco: {listing.title}. {url}")
 
 
+class ActionBlockedError(Exception):
+    """La acción no se puede hacer ahora; el mensaje está en español y se muestra al usuario."""
+
+
 def perform_action(listing: Listing, action: str) -> str:
-    """Pausar, activar, vender, renovar o eliminar. Devuelve el mensaje para el usuario."""
+    """Pausar, activar, vender, renovar o eliminar. Devuelve el mensaje para el usuario.
+
+    Lanza ValueError si la acción no existe o no aplica (un anuncio retirado por el admin solo se puede eliminar) y
+    ActionBlockedError si volver a activarlo pasaría el tope de anuncios activos."""
+    if listing.status == STATUS_REMOVED and action != "eliminar":
+        raise ValueError(f"El anuncio fue retirado: {action}")
+    reactivates = action in ("activar", "renovar") and listing.status != STATUS_ACTIVE
+    if reactivates and (blocked := publish_block_reason(listing.user)):
+        raise ActionBlockedError(blocked)
     if action in STATUS_ACTIONS:
         status, message = STATUS_ACTIONS[action]
         if action == "activar" and listing.expires_at and listing.expires_at < utcnow():
@@ -196,6 +208,8 @@ def _apply_email(user: User, email: str | None) -> None:
     """Guarda el correo; si cambió, vuelve a estar sin verificar."""
     if email != user.email:
         user.email, user.email_verified_at = email, None
+        # Un código enviado al correo anterior no debe servir para verificar el nuevo
+        VerificationCode.query.filter_by(user_id=user.id, used_at=None).update({"used_at": utcnow()})
 
 
 def send_email_verification(user: User) -> str | None:

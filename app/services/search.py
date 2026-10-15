@@ -1,5 +1,6 @@
 """Búsqueda y filtros del listado público (incluye filtros por atributos JSON)."""
 
+import math
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any
@@ -34,9 +35,10 @@ class SearchInfo:
 
 def _num(raw: str) -> float | None:
     try:
-        return float(str(raw).replace(".", "").replace(",", "."))
+        value = float(str(raw).replace(".", "").replace(",", "."))
     except ValueError:
         return None
+    return value if math.isfinite(value) else None  # «nan» e «inf» no son números de búsqueda
 
 
 def filterable_defs(category: Category | None) -> list[AttributeDef]:

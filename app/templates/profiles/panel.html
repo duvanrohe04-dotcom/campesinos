@@ -62,7 +62,7 @@
   {% if items %}
   <ul class="grid gap-3">
     {% for l in items %}
-    <li class="card p-3">
+    <li class="card p-3 min-w-0">{# min-w-0: en una cuadrícula, sin esto el título largo estira la tarjeta más que la pantalla #}
       <div class="flex gap-3">
         <a href="{{ listing_url(l) }}" aria-label="Ver el anuncio {{ l.title }}" class="shrink-0 w-24 h-24 rounded-xl bg-primary-50 overflow-hidden grid place-items-center text-primary-300">
           {% if l.main_image %}<img src="{{ url_for('static', filename='uploads/' ~ l.main_image.thumb) }}" alt="" loading="lazy" width="96" height="96" class="w-full h-full object-cover">{% else %}{{ cat_icon(l.category.icon, 'w-12 h-12') }}{% endif %}

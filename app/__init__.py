@@ -41,6 +41,27 @@ def _configure_sqlite(app: Flask) -> None:
         event.listen(db.engine, "connect", configure)
 
 
+def _version_static_urls(app: Flask) -> None:
+    """Añade ?v=<fecha del archivo> a las direcciones de /static (css, js…): al cambiar el archivo cambia la dirección y
+    ningún navegador ni caché se queda con la versión vieja. Las fotos subidas no cambian nunca: se dejan igual."""
+    seen: dict[str, str] = {}
+
+    @app.url_defaults
+    def add_version(endpoint: str, values: dict) -> None:
+        filename = values.get("filename") if endpoint == "static" else None
+        if not filename or "v" in values or filename.startswith("uploads/"):
+            return
+        if (
+            filename not in seen or app.debug
+        ):  # en desarrollo se vuelve a mirar: los archivos cambian mientras se trabaja
+            try:
+                seen[filename] = str(int(os.path.getmtime(os.path.join(app.static_folder, filename))))
+            except OSError:
+                seen[filename] = ""
+        if seen[filename]:
+            values["v"] = seen[filename]
+
+
 def _register_blueprints(app: Flask) -> None:
     from .blueprints.admin import bp as admin_bp
     from .blueprints.agenda import bp as agenda_bp
@@ -99,6 +120,7 @@ def create_app(config=None) -> Flask:
     from .templating import register_template_helpers
 
     _register_blueprints(app)
+    _version_static_urls(app)
     register_template_helpers(app)
     register_cli(app)
     register_error_handlers(app)

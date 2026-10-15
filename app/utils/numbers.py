@@ -16,7 +16,7 @@ def normalize_phone(raw: str | None) -> str | None:
 def parse_int(raw: str, minimum: int | None = None, maximum: int | None = None) -> int:
     """Convierte '1.200.000' / '$ 1,200,000' en int. Lanza ValueError con mensaje en español si no es válido."""
     cleaned = re.sub(r"[\s$.,]", "", str(raw))
-    if not cleaned.isdigit():
+    if not (cleaned.isascii() and cleaned.isdigit()):
         raise ValueError("Escribe solo números.")
     value = int(cleaned)
     if minimum is not None and value < minimum:

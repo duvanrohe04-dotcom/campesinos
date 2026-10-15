@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 
 from ...constants import (
@@ -27,7 +28,7 @@ from ...models import (
     Village,
 )
 from ...services import images
-from ...utils import slugify
+from ...utils import slugify, utcnow
 
 
 @dataclass
@@ -87,6 +88,8 @@ def moderate_listing(listing: Listing, action: str) -> str:
         listing.status, message = STATUS_REMOVED, "Anuncio retirado."
     elif action == "restaurar":
         listing.status, message = STATUS_ACTIVE, "Anuncio restaurado."
+        if not listing.expires_at or listing.expires_at < utcnow():  # si no, el cron lo vencería de inmediato
+            listing.set_expiry()
     elif action == "eliminar":
         for image in listing.images:
             images.delete_files(image.filename)
@@ -167,7 +170,11 @@ def delete_category(category: Category) -> bool:
     if category.children or Listing.query.filter_by(category_id=category.id).count():
         return False
     db.session.delete(category)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError:  # aún la usan otros datos (p. ej. precios de referencia históricos)
+        db.session.rollback()
+        return False
     return True
 
 

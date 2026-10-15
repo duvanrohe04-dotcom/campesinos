@@ -59,6 +59,12 @@
   </div>
 
   <div class="container-page max-w-2xl mt-4 pb-32">
+    {# Si publish.js no carga (conexión floja, archivo viejo en la caché), el formulario se ve completo y esto avisa qué hacer #}
+    <noscript><div class="alert alert-error mb-4" role="alert"><div class="flex-1">Para publicar necesitas activar JavaScript en tu navegador.</div></div></noscript>
+    <div id="wizard-fallback" class="alert alert-error mb-4" role="alert" hidden>
+      <div class="flex-1"><strong>El formulario no terminó de cargar.</strong> Pasa a veces cuando la señal está floja.
+        <div class="mt-2"><button type="button" class="btn btn-primary btn-sm" id="wizard-reload">Volver a cargar</button></div></div>
+    </div>
     <div id="draft-banner" class="hidden alert alert-info mb-4" role="status">
       <div class="flex-1"><strong>Tienes un borrador guardado.</strong> ¿Quieres continuar donde te quedaste?
         <div class="mt-2 flex gap-2"><button type="button" class="btn btn-primary btn-sm" id="draft-restore">Continuar</button>
@@ -222,6 +228,22 @@
     </div>
   </div>
 </form>
+<script>
+  /* Vigilante del asistente: a los 6 s, si publish.js no arrancó, muestra el aviso. «Volver a cargar» borra copias viejas guardadas en el teléfono. */
+  (function () {
+    var form = document.getElementById('pub-form'), box = document.getElementById('wizard-fallback');
+    setTimeout(function () { if (form && box && !form.hasAttribute('data-wizard')) box.hidden = false; }, 6000);
+    document.getElementById('wizard-reload').addEventListener('click', function () {
+      var done = function () { location.reload(); };
+      if (!('serviceWorker' in navigator) || !window.caches) return done();
+      navigator.serviceWorker.getRegistrations()
+        .then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); })
+        .then(function () { return caches.keys(); })
+        .then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); })
+        .then(done, done);
+    });
+  })();
+</script>
 {% endblock %}
 
 

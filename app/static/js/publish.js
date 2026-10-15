@@ -310,5 +310,6 @@
   }
 
   syncRoot();
+  form.setAttribute('data-wizard', ''); // todo cargó bien: desde aquí los pasos se muestran de uno en uno
   showStep(step);
 })();

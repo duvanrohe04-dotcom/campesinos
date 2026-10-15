@@ -7,7 +7,7 @@
   <p class="text-tierra-600 mt-1 mb-5">Es gratis y toma un minuto.</p>
   <form method="post" class="card p-5" novalidate>
     {{ form.hidden_tag() }}
-    <p class="alert alert-info mb-4" role="note">Con una sola cuenta puedes <strong>comprar, vender, alquilar o buscar</strong>. No tienes que elegir.</p>
+    <p class="alert alert-info mb-4" role="note"><span>Con una sola cuenta puedes <strong>comprar, vender, alquilar o buscar</strong>. No tienes que elegir.</span></p>
     {{ wtf_field(form.name, ph="Ej: Jorge Rojas", autocomplete="name") }}
     {{ wtf_field(form.phone, "Será tu WhatsApp para que te contacten.", "3101234567", "numeric", "tel") }}
     {{ wtf_field(form.password, "Mínimo 6 letras o números.", autocomplete="new-password") }}

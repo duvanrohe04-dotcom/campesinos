@@ -10,6 +10,7 @@ from flask_wtf.csrf import CSRFError
 from werkzeug.exceptions import HTTPException
 
 from .extensions import db
+from .utils import is_safe_next
 
 
 def register_error_handlers(app: Flask) -> None:
@@ -21,7 +22,7 @@ def register_error_handlers(app: Flask) -> None:
     def csrf_failed(_error: CSRFError):
         """Formulario viejo o sesión vencida: si se sabe de dónde venía, se vuelve ahí con un aviso."""
         previous = urlparse(request.referrer or "")
-        if previous.netloc == request.host and previous.path:
+        if previous.netloc == request.host and is_safe_next(previous.path):
             flash("Esa página estuvo abierta mucho tiempo o tu sesión venció. Inténtalo de nuevo.", "error")
             return redirect(previous.path + (f"?{previous.query}" if previous.query else ""))
         return render_template("errors/400.html"), 400

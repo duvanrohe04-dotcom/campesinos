@@ -1,4 +1,6 @@
-﻿from wtforms import BooleanField, IntegerField, SelectField, StringField
+﻿import math
+
+from wtforms import BooleanField, IntegerField, SelectField, StringField
 from wtforms.validators import DataRequired, Length, Optional, ValidationError
 
 from ...constants import ATTR_TYPES, CATEGORY_ICONS, HOME_SECTIONS
@@ -10,7 +12,12 @@ from ...utils import slugify
 
 def _parse_float(raw: str | None) -> float | None:
     raw = (raw or "").strip()
-    return float(raw.replace(",", ".")) if raw else None
+    if not raw:
+        return None
+    value = float(raw.replace(",", "."))
+    if not math.isfinite(value):
+        raise ValueError(raw)
+    return value
 
 
 class CategoryForm(BaseForm):

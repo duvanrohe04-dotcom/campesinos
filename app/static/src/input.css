@@ -79,7 +79,12 @@
   .gallery::-webkit-scrollbar { display: none; }
   .gallery > * { @apply snap-center shrink-0 w-full; }
 
-  .step-hidden { display: none !important; }
+  /* Los pasos del asistente de publicar solo se ocultan cuando publish.js ya arrancó (marca data-wizard).
+     Si ese archivo no carga o falla, el formulario se ve completo y se puede enviar en vez de quedar «muerto». */
+  #pub-form[data-wizard] .step-hidden { display: none !important; }
+  #pub-form:not([data-wizard]) #btn-back,
+  #pub-form:not([data-wizard]) #btn-next { display: none !important; }
+  #pub-form:not([data-wizard]) #btn-submit { display: inline-flex !important; }
 
   /* Contenido de artículos (HTML sanitizado) */
   .article-body h2 { @apply text-2xl font-bold mt-8 mb-2; }
