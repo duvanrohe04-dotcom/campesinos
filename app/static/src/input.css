@@ -19,7 +19,10 @@
   @media (max-width: 1023px) {
     .kb-open [data-bottom-nav] { display: none; }
     .kb-open header.sticky { position: static; }
+    .kb-open .sticky.top-16 { top: 0; }  /* barra de pasos de publicar: ya no hay encabezado fijo encima */
   }
+  /* Enlaces del pie: zona táctil de al menos 44 px de alto */
+  footer ul a { display: inline-block; padding-block: 0.6rem; }
   .no-js .js-only { display: none !important; }
   .js .no-js-only { display: none !important; }
 }
@@ -101,3 +104,8 @@
   .article-body blockquote { @apply border-l-4 border-sol-400 bg-sol-50 px-4 py-2 my-4 italic; }
   .article-body a { @apply font-bold underline; }
 }
+
+/* Botones + / − del mapa: Leaflet los trae de 30 px. Va FUERA de @layer porque Tailwind descarta las reglas con clases
+   que no aparecen en las plantillas (las de Leaflet vienen de una librería externa). !important porque el CSS de
+   Leaflet se carga después y, con la misma especificidad, ganaría. */
+.leaflet-container .leaflet-bar a { width: 44px !important; height: 44px !important; line-height: 44px !important; font-size: 1.4rem !important; }

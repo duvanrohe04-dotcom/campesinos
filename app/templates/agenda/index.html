@@ -31,9 +31,17 @@
             {% set evs = m.events_by_day.get(day, []) %}
             <td class="p-0.5 align-top">
               <div class="min-h-[3.25rem] rounded-lg p-1 text-sm {{ 'bg-tierra-100 text-tierra-500' if day.month != m.month else 'bg-white border border-tierra-200' }} {{ 'ring-2 ring-primary-600' if evs }}">
+                {# En celular cada día mide ~45 px: no cabe el título. El día con eventos es el enlace (toda la celda) y lleva un punto;
+                   desde sm se ven también los títulos. #}
+                {% if evs %}
+                <a href="{{ event_url(evs[0]) }}" class="block -m-1 p-1 min-h-[2.75rem] sm:min-h-0 font-extrabold text-primary-800 no-underline"
+                   aria-label="{{ day.day }}: {{ evs|length }} {{ 'evento' if evs|length == 1 else 'eventos' }}. {{ evs[0].title }}">
+                  {{ day.day }}<span class="sm:hidden block mx-auto mt-1 w-2.5 h-2.5 rounded-full bg-primary-700" aria-hidden="true"></span></a>
+                {% else %}
                 <span class="block font-bold {{ 'text-tierra-500' if day.month != m.month }}">{{ day.day }}</span>
-                {% for e in evs[:2] %}<a href="{{ event_url(e) }}" class="block truncate text-[11px] leading-tight font-bold text-primary-800 no-underline" title="{{ e.title }}">{{ e.title }}</a>{% endfor %}
-                {% if evs|length > 2 %}<span class="text-[11px] text-tierra-600">+{{ evs|length - 2 }} más</span>{% endif %}
+                {% endif %}
+                {% for e in evs[:2] %}<a href="{{ event_url(e) }}" class="hidden sm:block truncate text-[11px] leading-tight font-bold text-primary-800 no-underline" title="{{ e.title }}">{{ e.title }}</a>{% endfor %}
+                {% if evs|length > 2 %}<span class="hidden sm:inline text-[11px] text-tierra-600">+{{ evs|length - 2 }} más</span>{% endif %}
               </div>
             </td>
             {% endfor %}

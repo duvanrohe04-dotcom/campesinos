@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% from "components/icons.html" import ui, cat_icon %}
 {% from "components/cards.html" import listing_card, category_tile %}
 {% from "components/widgets.html" import empty_state %}
@@ -8,7 +8,7 @@
 <section class="container-page mt-10" aria-labelledby="s-{{ loop.index if false else title|replace(' ', '') }}">
   <div class="flex items-end justify-between gap-3 mb-4">
     <h2 id="s-{{ title|replace(' ', '') }}" class="!text-2xl">{{ title }}</h2>
-    <a class="font-bold whitespace-nowrap" href="{{ href }}">Ver todo</a>
+    <a class="inline-flex items-center min-h-[2.75rem] px-2 -mr-2 font-bold whitespace-nowrap" href="{{ href }}">Ver todo</a>
   </div>
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
     {% for l in items %}{{ listing_card(l) }}{% endfor %}
@@ -75,7 +75,7 @@
 <section class="container-page mt-10" aria-labelledby="recientes">
   <div class="flex items-end justify-between gap-3 mb-4">
     <h2 id="recientes" class="!text-2xl">Recién publicado</h2>
-    <a class="font-bold whitespace-nowrap" href="{{ url_for('listings.index') }}">Ver todo</a>
+    <a class="inline-flex items-center min-h-[2.75rem] px-2 -mr-2 font-bold whitespace-nowrap" href="{{ url_for('listings.index') }}">Ver todo</a>
   </div>
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
     {% for l in recent %}{{ listing_card(l) }}{% endfor %}

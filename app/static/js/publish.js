@@ -318,15 +318,19 @@
     }, 500);
   }
   function restore(d) {
-    Object.keys(d).forEach(function (name) {
-      var els = form.querySelectorAll('[name="' + name + '"]');
-      Array.prototype.forEach.call(els, function (el) {
+    // Los bloques de las categorías no elegidas están deshabilitados y repiten los mismos nombres (unidad de precio,
+    // sexo…): si se marcaran también, el navegador se quedaría con la opción del bloque oculto y la elegida se perdería.
+    function apply(name) {
+      Array.prototype.forEach.call(form.querySelectorAll('[name="' + name + '"]'), function (el) {
+        if (el.disabled || (el.closest && el.closest('fieldset:disabled'))) return;
         if (el.type === 'radio') el.checked = el.value === d[name];
         else if (el.type === 'checkbox') el.checked = d[name] === el.value;
         else el.value = d[name];
       });
-    });
-    syncRoot();
+    }
+    apply('root_id');
+    syncRoot();  // habilita el bloque de la categoría elegida antes de llenar sus campos
+    Object.keys(d).forEach(function (name) { if (name !== 'root_id') apply(name); });
     form.querySelectorAll('[data-village-select]').forEach(function (s) {
       var v = d[s.name]; var src = document.getElementById(s.getAttribute('data-mun-source'));
       if (src) src.dispatchEvent(new Event('change')); if (v) s.value = v;

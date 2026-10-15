@@ -20,7 +20,7 @@
   <div class="card p-5 mt-5 grid gap-2">
     <p class="font-extrabold">También puedes escribirnos por:</p>
     {% if config.CONTACT_WHATSAPP %}<a class="btn btn-whatsapp" href="https://wa.me/57{{ config.CONTACT_WHATSAPP }}" rel="noopener">{{ ui('whatsapp', 'w-5 h-5') }}WhatsApp</a>{% endif %}
-    <a href="mailto:{{ config.CONTACT_EMAIL }}" class="font-bold">{{ config.CONTACT_EMAIL }}</a>
+    <a href="mailto:{{ config.CONTACT_EMAIL }}" class="inline-block py-2 font-bold break-all">{{ config.CONTACT_EMAIL }}</a>
   </div>
 </div>
 {% endblock %}

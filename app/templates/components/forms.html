@@ -5,10 +5,12 @@
 {%- endmacro %}
 
 {# Campo de texto / número. values y errors son diccionarios. #}
-{% macro text_field(name, label, values, errors, help="", ph="", type="text", inputmode=None, maxlength=None, required=False, extra="") -%}
+{# dom: sufijo del id cuando el mismo campo se repite en la página (un bloque por categoría); por defecto, el nombre #}
+{% macro text_field(name, label, values, errors, help="", ph="", type="text", inputmode=None, maxlength=None, required=False, extra="", dom=None) -%}
+{%- set dom = dom or name -%}
 <div class="mb-4">
-  <label class="label" for="f-{{ name }}">{{ label }}{% if required %} <span class="text-secondary-700" aria-hidden="true">*</span>{% endif %}</label>
-  <input class="input{{ ' input-error' if errors and errors.get(name) }}" id="f-{{ name }}" name="{{ name }}" type="{{ type }}"
+  <label class="label" for="f-{{ dom }}">{{ label }}{% if required %} <span class="text-secondary-700" aria-hidden="true">*</span>{% endif %}</label>
+  <input class="input{{ ' input-error' if errors and errors.get(name) }}" id="f-{{ dom }}" name="{{ name }}" type="{{ type }}"
          value="{{ values.get(name, '') }}" placeholder="{{ ph }}" {% if inputmode %}inputmode="{{ inputmode }}"{% endif %}
          {% if maxlength %}maxlength="{{ maxlength }}"{% endif %} {{ extra|safe }}
          {% if errors and errors.get(name) %}aria-invalid="true" aria-describedby="err-{{ name }}"{% endif %}>
@@ -55,7 +57,8 @@
 {%- endmacro %}
 
 {# Opciones como fichas grandes (radio). options: lista de (valor, texto) #}
-{% macro choice_pick(name, label, options, values, errors, cols="grid-cols-2", required=False, help="") -%}
+{% macro choice_pick(name, label, options, values, errors, cols="grid-cols-2", required=False, help="", dom=None) -%}
+{%- set dom = dom or name -%}
 <fieldset class="mb-4">
   <legend class="label">{{ label }}{% if required %} <span class="text-secondary-700">*</span>{% endif %}</legend>
   <div class="grid {{ cols }} gap-3">
@@ -67,8 +70,8 @@
   {# Si hay una opción «Otra/Otro», se pide escribir cuál es (app.js la muestra solo al elegirla) #}
   {% if options|map('first')|map('lower')|select('in', OTHER_CHOICES)|list %}
   <div class="mt-3" data-other-for="{{ name }}">
-    <label class="label" for="f-{{ name }}__other">¿Cuál? Escríbelo</label>
-    <input class="input" id="f-{{ name }}__other" name="{{ name }}__other" type="text" maxlength="{{ ATTR_TEXT_MAX }}" value="{{ values.get(name ~ '__other', '') }}" autocomplete="off">
+    <label class="label" for="f-{{ dom }}__other">¿Cuál? Escríbelo</label>
+    <input class="input" id="f-{{ dom }}__other" name="{{ name }}__other" type="text" maxlength="{{ ATTR_TEXT_MAX }}" value="{{ values.get(name ~ '__other', '') }}" autocomplete="off">
   </div>
   {% endif %}
   {% if help %}<p class="help">{{ help }}</p>{% endif %}
@@ -77,10 +80,16 @@
 {%- endmacro %}
 
 {# Campo de WTForms (login/registro) #}
+{# Solo se escriben los atributos que traen valor. WTForms convierte None en el texto «None», y `inputmode="None"` es
+   `inputmode="none"` (los valores no distinguen mayúsculas): ordena al celular NO mostrar el teclado. #}
 {% macro wtf_field(field, help="", ph="", inputmode=None, autocomplete=None) -%}
+{%- set attrs = {} -%}
+{%- if ph %}{% set _ = attrs.update(placeholder=ph) %}{% endif -%}
+{%- if inputmode %}{% set _ = attrs.update(inputmode=inputmode) %}{% endif -%}
+{%- if autocomplete %}{% set _ = attrs.update(autocomplete=autocomplete) %}{% endif -%}
 <div class="mb-4">
   <label class="label" for="{{ field.id }}">{{ field.label.text }}</label>
-  {{ field(class_="input" ~ (" input-error" if field.errors else ""), placeholder=ph, inputmode=inputmode, autocomplete=autocomplete) }}
+  {{ field(class_="input" ~ (" input-error" if field.errors else ""), **attrs) }}
   {% if help %}<p class="help">{{ help }}</p>{% endif %}
   {% for e in field.errors %}<p class="error-text" role="alert">{{ e }}</p>{% endfor %}
 </div>

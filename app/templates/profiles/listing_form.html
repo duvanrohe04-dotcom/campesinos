@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% from "components/icons.html" import ui, cat_icon %}
 {% from "components/forms.html" import text_field, textarea_field, select_field, yesno_field, choice_pick, err, village_select %}
 {% from "components/alerts.html" import ica_notice %}
@@ -10,18 +10,20 @@
 <script src="{{ url_for('static', filename='js/map.js') }}" defer></script>{% endblock %}
 
 {# Campo dinámico según el tipo de atributo #}
-{% macro attr_field(d, values, errors) %}
+{# root_id: categoría raíz del bloque. El mismo dato (p. ej. «raza») existe en varias categorías: el id debe ser único. #}
+{% macro attr_field(d, values, errors, root_id) %}
   {% set name = 'attr_' ~ d.key %}
+  {% set dom = root_id ~ '-' ~ name %}
   {% set req = d.required %}
   {% if d.type == 'choice' %}
-    <div {% if req %}data-req{% endif %}>{{ choice_pick(name, d.label, d.choices|zip(d.choices), values, errors, 'grid-cols-2', req, d.help_text) }}</div>
+    <div {% if req %}data-req{% endif %}>{{ choice_pick(name, d.label, d.choices|zip(d.choices), values, errors, 'grid-cols-2', req, d.help_text, dom) }}</div>
   {% elif d.type == 'bool' %}
     <div {% if req %}data-req{% endif %}>{{ yesno_field(name, d.label, values, errors, req) }}</div>
   {% elif d.type == 'age' %}
     <div class="mb-4">
-      <label class="label" for="f-{{ name }}">{{ d.label }}{% if req %} <span class="text-secondary-700">*</span>{% endif %}</label>
+      <label class="label" for="f-{{ dom }}">{{ d.label }}{% if req %} <span class="text-secondary-700">*</span>{% endif %}</label>
       <div class="grid grid-cols-[1fr_8rem] gap-3">
-        <input class="input{{ ' input-error' if errors.get(name) }}" id="f-{{ name }}" name="{{ name }}" inputmode="numeric" placeholder="Ej: 18" value="{{ values.get(name, '') }}" {% if req %}data-req{% endif %}>
+        <input class="input{{ ' input-error' if errors.get(name) }}" id="f-{{ dom }}" name="{{ name }}" inputmode="numeric" placeholder="Ej: 18" value="{{ values.get(name, '') }}" {% if req %}data-req{% endif %}>
         <select class="input" name="{{ name }}__unit" aria-label="Unidad de edad">
           <option value="meses" {{ 'selected' if values.get(name ~ '__unit', 'meses') == 'meses' }}>meses</option>
           <option value="años" {{ 'selected' if values.get(name ~ '__unit') == 'años' }}>años</option>
@@ -31,9 +33,9 @@
       {{ err(errors, name) }}
     </div>
   {% elif d.type in ('int', 'decimal') %}
-    {{ text_field(name, d.label ~ (' (' ~ d.unit ~ ')' if d.unit else ''), values, errors, d.help_text or 'Escribe solo números.', 'Ej: ' ~ ('250' if d.type == 'int' else '1.45'), inputmode='numeric' if d.type == 'int' else 'decimal', required=req, extra='data-req' if req else '') }}
+    {{ text_field(name, d.label ~ (' (' ~ d.unit ~ ')' if d.unit else ''), values, errors, d.help_text or 'Escribe solo números.', 'Ej: ' ~ ('250' if d.type == 'int' else '1.45'), inputmode='numeric' if d.type == 'int' else 'decimal', required=req, extra='data-req' if req else '', dom=dom) }}
   {% else %}
-    {{ text_field(name, d.label, values, errors, d.help_text, '', maxlength=120, required=req, extra='data-req' if req else '') }}
+    {{ text_field(name, d.label, values, errors, d.help_text, '', maxlength=120, required=req, extra='data-req' if req else '', dom=dom) }}
   {% endif %}
 {% endmacro %}
 
@@ -50,7 +52,7 @@
     <div class="container-page max-w-2xl py-3">
       <div class="flex items-center justify-between gap-3">
         <p class="font-extrabold text-primary-800" id="step-label" aria-live="polite">Paso 1 de 4</p>
-        <a href="{{ url_for('profiles.panel') if editing else url_for('main.home') }}" class="text-sm font-bold text-tierra-600">Salir</a>
+        <a href="{{ url_for('profiles.panel') if editing else url_for('main.home') }}" class="inline-flex items-center min-h-[2.75rem] px-3 -mr-3 text-base font-bold text-tierra-700">Salir</a>
       </div>
       <ol class="grid grid-cols-4 gap-1.5 mt-2" id="step-bar" aria-hidden="true">
         {% for i in range(4) %}<li class="h-2.5 rounded-full bg-tierra-200"></li>{% endfor %}
@@ -127,7 +129,8 @@
 
       {% for r in roots %}
       <fieldset data-root="{{ r.id }}" {% if selected_root != r.id %}disabled hidden{% endif %}>
-        {% for d in attr_defs[r.id] %}{{ attr_field(d, values, errors) }}{% endfor %}
+        {% set mine = selected_root == r.id %}
+        {% for d in attr_defs[r.id] %}{{ attr_field(d, values if mine else {}, errors if mine else {}, r.id) }}{% endfor %}
       </fieldset>
       {% endfor %}
 
@@ -168,7 +171,7 @@
         <legend class="label">Precio por…</legend>
         <div class="flex flex-wrap gap-2">
           {% for u in r.units %}
-          <label class="pick"><input type="radio" name="price_unit" value="{{ u }}" {{ 'checked' if values.get('price_unit') == u }}>
+          <label class="pick"><input type="radio" name="price_unit" value="{{ u }}" {{ 'checked' if selected_root == r.id and values.get('price_unit') == u }}>
             <span class="pick-body !min-h-[3rem] !px-4 !py-2 !rounded-full">{{ u }}</span></label>
           {% endfor %}
         </div>

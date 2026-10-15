@@ -3,7 +3,7 @@
 {% from "components/badges.html" import verified_seller_badge, email_verified_badge %}
 {% block admin %}
 <h1>Usuarios</h1>
-<form class="flex gap-2 my-3" method="get"><input class="input" name="q" value="{{ q }}" placeholder="Buscar por nombre o celular"><button class="btn btn-primary">Buscar</button></form>
+<form class="flex gap-2 my-3" method="get"><input class="input" name="q" value="{{ q }}" placeholder="Buscar por nombre o celular" aria-label="Buscar usuarios por nombre o celular" enterkeyhint="search"><button class="btn btn-primary" type="submit">Buscar</button></form>
 <div class="card divide-y divide-tierra-200">
   {% for u in users %}
   <div class="p-3 flex items-center justify-between gap-3 flex-wrap">
