@@ -115,7 +115,7 @@
   </footer>
 
   {% block bottom_nav %}
-  <nav class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-tierra-200 grid grid-cols-5 text-xs font-bold" aria-label="Menú">
+  <nav data-bottom-nav class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-tierra-200 grid grid-cols-5 text-xs font-bold" aria-label="Menú">
     {% set ep = request.endpoint or '' %}
     {% macro tab(href, icon, label, active) %}
     <a href="{{ href }}" class="flex flex-col items-center justify-center gap-0.5 py-2 min-h-[3.75rem] no-underline {{ 'text-primary-700' if active else 'text-tierra-600' }}" {% if active %}aria-current="page"{% endif %}>

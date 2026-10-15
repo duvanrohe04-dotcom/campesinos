@@ -19,24 +19,42 @@
     }
   });
 
+  // Teclado abierto: en pantallas pequeñas el CSS quita la barra inferior y el encabezado fijo (.kb-open) para que
+  // el campo en el que se escribe no quede casi sin espacio.
+  var TYPING = 'input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=file]), textarea, select';
+  function isTyping(el) {
+    var matches = el && (el.matches || el.webkitMatchesSelector || el.msMatchesSelector);
+    return !!matches && matches.call(el, TYPING);
+  }
+  document.addEventListener('focusin', function (e) {
+    if (isTyping(e.target)) document.documentElement.classList.add('kb-open');
+  });
+  document.addEventListener('focusout', function () {
+    setTimeout(function () {  // al pasar de un campo a otro no debe parpadear
+      if (!isTyping(document.activeElement)) document.documentElement.classList.remove('kb-open');
+    }, 150);
+  });
+
   // Confirmaciones sencillas en formularios de acción
   document.addEventListener('submit', function (e) {
     var msg = e.target.getAttribute && e.target.getAttribute('data-confirm');
     if (msg && !window.confirm(msg)) e.preventDefault();
   });
 
-  // Veredas filtradas por el municipio elegido
+  // Veredas filtradas por el municipio elegido. Se quitan de la lista las de otros municipios: ocultarlas con
+  // `hidden`/`disabled` no funciona en iPhone ni en varios Android (siguen apareciendo, en gris).
   function syncVillages(sel) {
     var src = document.getElementById(sel.getAttribute('data-mun-source'));
     if (!src) return;
-    var mun = src.value, current = sel.value, keep = false;
-    Array.prototype.forEach.call(sel.options, function (o) {
-      if (!o.value || o.value === OTHER_VILLAGE) return;  // «Elige» y «Otra» siempre visibles
-      var show = o.getAttribute('data-mun') === mun;
-      o.hidden = !show; o.disabled = !show;
-      if (show && o.value === current) keep = true;
+    if (!sel._allOptions) sel._allOptions = Array.prototype.slice.call(sel.options);
+    var mun = src.value, current = sel.value;
+    while (sel.options.length) sel.remove(0);
+    sel._allOptions.forEach(function (o) {
+      var always = !o.value || o.value === OTHER_VILLAGE;  // «Elige» y «Otra» siempre visibles
+      if (always || o.getAttribute('data-mun') === mun) sel.appendChild(o);
     });
-    if (!keep && current !== OTHER_VILLAGE) sel.value = '';
+    sel.value = current;
+    if (sel.value !== current) sel.value = '';
   }
   var OTHER_VILLAGE = '0';
   document.querySelectorAll('[data-village-select]').forEach(function (sel) {

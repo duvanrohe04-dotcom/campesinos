@@ -123,6 +123,9 @@ BACK_FALLBACK_PREFIXES = (
 )
 BACK_DEFAULT = "main.home"
 
+# --- Permisos del navegador (cabecera Permissions-Policy). El micrófono lo usa el dictado por voz. ---
+PERMISSIONS_POLICY = "geolocation=(self), camera=(self), microphone=(self)"
+
 # --- Sitemap ---
 SITEMAP_MAX_LISTINGS = 5000
 

@@ -8,6 +8,8 @@
   var TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
   var ATTRIBUTION = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
   var loading = null;
+  // Sin límite de tiempo, un GPS apagado o lento deja el botón esperando para siempre. Se acepta una ubicación de hace 5 min.
+  var GEO_OPTIONS = { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 };
 
   function addCss(href) {
     var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = href; document.head.appendChild(l);
@@ -138,10 +140,11 @@
     var here = document.getElementById('map-picker-here');
     if (!navigator.geolocation) { here.hidden = true; }
     here.addEventListener('click', function () {
+      document.getElementById('map-picker-status').textContent = 'Buscando tu ubicación…';
       navigator.geolocation.getCurrentPosition(function (pos) {
         initPicker();
         setPoint(pos.coords.latitude, pos.coords.longitude, true);
-      }, function () { document.getElementById('map-picker-status').textContent = 'No pudimos ver tu ubicación. Toca el mapa para marcar el punto.'; });
+      }, function () { document.getElementById('map-picker-status').textContent = 'No pudimos ver tu ubicación. Toca el mapa para marcar el punto.'; }, GEO_OPTIONS);
     });
   }
 
@@ -157,6 +160,6 @@
       u.searchParams.set('radio', btn.getAttribute('data-radius'));
       u.searchParams.delete('page');
       window.location.href = u.toString();
-    }, function () { btn.disabled = false; alert('No pudimos ver tu ubicación. Revisa que el permiso de ubicación esté activado.'); });
+    }, function () { btn.disabled = false; alert('No pudimos ver tu ubicación. Revisa que el permiso de ubicación y el GPS estén activados.'); }, GEO_OPTIONS);
   });
 })();

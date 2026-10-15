@@ -7,6 +7,7 @@ from sqlalchemy import event
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .config import resolve_config
+from .constants import PERMISSIONS_POLICY
 from .errors import configure_logging, register_error_handlers
 from .extensions import csrf, db, limiter, login_manager, migrate
 
@@ -84,7 +85,7 @@ def _add_security_headers(app: Flask) -> None:
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
-        response.headers.setdefault("Permissions-Policy", "geolocation=(self), camera=(self), microphone=()")
+        response.headers.setdefault("Permissions-Policy", PERMISSIONS_POLICY)
         if app.config.get("SESSION_COOKIE_SECURE"):
             response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
         return response

@@ -48,7 +48,7 @@
     btnBack.style.visibility = step === 1 ? 'hidden' : 'visible';
     btnNext.classList.toggle('hidden', step === 4);
     btnSubmit.classList.toggle('hidden', step !== 4);
-    window.scrollTo({ top: 0 });
+    window.scrollTo(0, 0);  // sin objeto de opciones: Safari antiguo no lo entiende
     document.dispatchEvent(new CustomEvent('step-shown', { detail: step }));
   }
 
@@ -97,6 +97,11 @@
   btnBack.addEventListener('click', function () { showStep(step - 1); });
   form.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' && e.target.tagName === 'INPUT' && step < 4) { e.preventDefault(); btnNext.click(); }
+  });
+  // Muchos teclados de Android no mandan «Enter» al tocar «Ir»/«Siguiente» y envían el formulario: antes del paso 4
+  // eso debe avanzar de paso, no publicar a medias.
+  form.addEventListener('submit', function (e) {
+    if (step < 4) { e.preventDefault(); e.stopImmediatePropagation(); btnNext.click(); }
   });
 
   /* ---------- Precio con separador de miles mientras escribe ---------- */
@@ -194,28 +199,55 @@
     renderPhotos();
   }
 
-  /* Compresión en el navegador: máx. 1200px, WebP (o JPEG si no hay soporte) */
+  /* Compresión en el navegador: máx. 1200px, WebP (o JPEG si el navegador no sabe WebP). Si algo falla (poca memoria,
+     foto enorme, formato raro) se sube la foto original: el servidor la reduce igual. Nunca se queda esperando. */
+  // Los navegadores viejos no giran la foto según su orientación al dibujarla: se deja que el servidor lo haga.
+  var autoRotates = !!(window.CSS && CSS.supports && CSS.supports('image-orientation', 'from-image'));
+  var COMPRESS_TIMEOUT_MS = 15000;
   function compress(file) {
     return new Promise(function (resolve) {
-      function done(f) { resolve(f); }
-      var url = URL.createObjectURL(file);
-      var img = new Image();
-      img.onload = function () {
-        var s = Math.min(1, 1200 / Math.max(img.width, img.height));
-        var c = document.createElement('canvas');
-        c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
-        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-        c.toBlob(function (blob) {
-          URL.revokeObjectURL(url);
-          if (!blob) return done(file);
-          var ext = blob.type === 'image/webp' ? 'webp' : 'jpg';
-          done(new File([blob], 'foto.' + ext, { type: blob.type }));
-        }, 'image/webp', 0.8);
-      };
-      img.onerror = function () { URL.revokeObjectURL(url); done(file); };
-      img.src = url;
+      var url = null, finished = false;
+      function done(f) {
+        if (finished) return;
+        finished = true; clearTimeout(timer);
+        if (url) URL.revokeObjectURL(url);
+        resolve(f);
+      }
+      var timer = setTimeout(function () { done(file); }, COMPRESS_TIMEOUT_MS);
+      if (!autoRotates || !window.HTMLCanvasElement || !HTMLCanvasElement.prototype.toBlob) return done(file);
+      try {
+        url = URL.createObjectURL(file);
+        var img = new Image();
+        img.onload = function () {
+          try {
+            var s = Math.min(1, 1200 / Math.max(img.width, img.height));
+            var c = document.createElement('canvas');
+            c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+            c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+            c.toBlob(function (blob) {
+              if (blob && blob.type === 'image/webp') return done(new File([blob], 'foto.webp', { type: blob.type }));
+              // Safari y otros no saben WebP y devuelven PNG (muy pesado): se pide JPEG
+              c.toBlob(function (jpg) {
+                done(jpg ? new File([jpg], 'foto.jpg', { type: 'image/jpeg' }) : file);
+              }, 'image/jpeg', 0.82);
+            }, 'image/webp', 0.8);
+          } catch (err) { done(file); }
+        };
+        img.onerror = function () { done(file); };
+        img.src = url;
+      } catch (err) { done(file); }
     });
   }
+
+  // Sin DataTransfer (iPhone con iOS anterior a 14.5 y Androids viejos) no se pueden armar los archivos a mano:
+  // los dos selectores se envían tal cual, con el nombre «photos». Se pierde ordenar/quitar fotos nuevas, pero no se pierden fotos.
+  var canTransfer = true;
+  try { new DataTransfer(); } catch (err) { canTransfer = false; }
+
+  var inCam = document.getElementById('in-camera'), inGal = document.getElementById('in-gallery');
+  if (!canTransfer) { inCam.name = 'photos'; inGal.name = 'photos'; }
+  function nativeCount() { return (inCam.files ? inCam.files.length : 0) + (inGal.files ? inGal.files.length : 0); }
+
   function addFiles(list) {
     msg.textContent = '';
     var files = Array.prototype.slice.call(list);
@@ -226,27 +258,36 @@
       renderPhotos();
     });
   }
-  var inCam = document.getElementById('in-camera'), inGal = document.getElementById('in-gallery');
   document.getElementById('btn-camera').addEventListener('click', function () { inCam.click(); });
   document.getElementById('btn-gallery').addEventListener('click', function () { inGal.click(); });
   [inCam, inGal].forEach(function (inp) {
-    inp.addEventListener('change', function () { addFiles(inp.files); inp.value = ''; });
+    inp.addEventListener('change', function () {
+      if (!canTransfer) {
+        var n = nativeCount();
+        msg.textContent = n ? n + (n === 1 ? ' foto nueva lista' : ' fotos nuevas listas') + ' para subir.' : '';
+        return;
+      }
+      addFiles(inp.files); inp.value = '';
+    });
   });
   renderPhotos();
 
   /* Al enviar: orden de fotos + archivos ya comprimidos */
   form.addEventListener('submit', function () {
-    var tokens = [], dt = null, n = 0;
-    try { dt = new DataTransfer(); } catch (e) { dt = null; }
-    items.forEach(function (it) {
-      if (it.kind === 'e') tokens.push('e' + it.id);
-      else if (dt) { dt.items.add(it.file); tokens.push('n' + n); n += 1; }
-    });
-    if (dt) {
+    var tokens = [], n = 0, i;
+    if (canTransfer) {
+      var dt = new DataTransfer();
+      items.forEach(function (it) {
+        if (it.kind === 'e') tokens.push('e' + it.id);
+        else { dt.items.add(it.file); tokens.push('n' + n); n += 1; }
+      });
       document.getElementById('photos').files = dt.files;
-      document.getElementById('image-order').value = tokens.join(',');
-      document.getElementById('image-order-set').value = '1';
+    } else {
+      items.forEach(function (it) { if (it.kind === 'e') tokens.push('e' + it.id); });
+      for (i = 0; i < nativeCount(); i += 1) tokens.push('n' + i);
     }
+    document.getElementById('image-order').value = tokens.join(',');
+    document.getElementById('image-order-set').value = '1';
     btnSubmit.disabled = true; btnSubmit.textContent = 'Publicando…';
   });
 
