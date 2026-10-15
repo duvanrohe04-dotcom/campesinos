@@ -1,4 +1,5 @@
 {% extends "admin/base.html" %}
+{% set back_url = url_for('admin.articles') %}
 {% from "components/forms.html" import wtf_field, wtf_checkbox %}
 {% block head %}
 <link rel="stylesheet" href="https://unpkg.com/trix@2.1.1/dist/trix.css">
@@ -28,5 +29,4 @@
   {{ wtf_checkbox(form.is_published) }}
   <button class="btn btn-primary btn-lg w-full">Guardar</button>
 </form>
-<a class="btn btn-ghost mt-4" href="{{ url_for('admin.articles') }}">← Volver</a>
 {% endblock %}

@@ -2,11 +2,11 @@
 {% from "components/icons.html" import ui %}
 {% from "components/cards.html" import avatar %}
 {% from "components/buttons.html" import whatsapp_button, call_button %}
+{% set back_label = "Volver al anuncio" if listing else "Volver al perfil" %}
 {% block title %}Celular de {{ seller.name }} · {{ config.SITE_NAME }}{% endblock %}
 {% block head %}<meta name="robots" content="noindex, nofollow">{% endblock %}
 {% block content %}
 <div class="container-page max-w-md mt-6">
-  <a class="inline-flex items-center gap-1 font-bold mb-3" href="{{ back_url }}">← Volver{% if listing %} al anuncio{% endif %}</a>
   <section class="card p-5 text-center" aria-labelledby="contacto">
     <div class="flex justify-center">{{ avatar(seller, "w-20 h-20", "text-3xl") }}</div>
     <h1 id="contacto" class="!text-2xl mt-3">{{ seller.farm_name or seller.name }}</h1>

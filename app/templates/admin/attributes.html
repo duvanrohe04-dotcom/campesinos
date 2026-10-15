@@ -1,4 +1,5 @@
 {% extends "admin/base.html" %}
+{% set back_url = url_for('admin.categories') %}
 {% from "components/buttons.html" import post_button %}
 {% block admin %}
 <div class="flex items-center justify-between gap-3 flex-wrap"><h1>Datos específicos: {{ category.name }}</h1>
@@ -14,5 +15,4 @@
   </div>
   {% else %}<p class="p-4 text-tierra-600">Esta categoría no tiene datos específicos.</p>{% endfor %}
 </div>
-<a class="btn btn-ghost mt-4" href="{{ url_for('admin.categories') }}">← Volver</a>
 {% endblock %}

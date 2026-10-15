@@ -1,4 +1,5 @@
 {% extends "admin/base.html" %}
+{% set back_url = url_for('admin.municipalities') %}
 {% from "components/forms.html" import wtf_field %}
 {% from "components/buttons.html" import post_button %}
 {% block admin %}
@@ -36,5 +37,4 @@
   </div>
   {% else %}<p class="p-4 text-tierra-600">Sin veredas todavía.</p>{% endfor %}
 </div>
-<a class="btn btn-ghost mt-4" href="{{ url_for('admin.municipalities') }}">← Volver</a>
 {% endblock %}

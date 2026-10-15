@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% set back_url = url_for('profiles.edit_profile') %}
 {% from "components/forms.html" import wtf_field, wtf_checkbox %}
 {% from "components/icons.html" import ui %}
 {% block title %}Mi cuenta y mis datos · {{ config.SITE_NAME }}{% endblock %}
@@ -29,6 +30,5 @@
     </form>
     {% endif %}
   </section>
-  <a class="btn btn-ghost w-full mt-4" href="{{ url_for('profiles.edit_profile') }}">Volver a mi perfil</a>
 </div>
 {% endblock %}

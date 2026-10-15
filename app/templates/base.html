@@ -1,5 +1,6 @@
 ﻿{% from "components/icons.html" import ui, logo %}
 {% from "components/alerts.html" import flashes %}
+{% from "components/buttons.html" import back_button %}
 <!doctype html>
 <html lang="es-CO" class="no-js">
 <head>
@@ -60,6 +61,13 @@
   {{ flashes() }}
 
   <main id="contenido" class="flex-1 pb-24 lg:pb-8">
+    {# «Volver» en todas las páginas menos el inicio. Una página puede fijar `back_url` / `back_label`, o `hide_back`. #}
+    {% block back %}
+    {% set back_to = back_url or back_target(request.endpoint) %}
+    {% if back_to and not hide_back %}
+    <div class="container-page pt-3">{{ back_button(back_to, back_label or "Volver") }}</div>
+    {% endif %}
+    {% endblock %}
     {% block content %}{% endblock %}
   </main>
 

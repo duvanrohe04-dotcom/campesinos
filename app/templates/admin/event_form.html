@@ -1,4 +1,5 @@
 {% extends "admin/base.html" %}
+{% set back_url = url_for('admin.events') %}
 {% from "components/forms.html" import wtf_field, wtf_checkbox %}
 {% block admin %}
 <h1>{{ 'Editar' if event else 'Nuevo' }} evento</h1>
@@ -18,5 +19,4 @@
   {{ wtf_checkbox(form.is_published) }}
   <button class="btn btn-primary btn-lg w-full">Guardar</button>
 </form>
-<a class="btn btn-ghost mt-4" href="{{ url_for('admin.events') }}">← Volver</a>
 {% endblock %}

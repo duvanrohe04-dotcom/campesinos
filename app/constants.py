@@ -100,6 +100,29 @@ CLICK_WHATSAPP, CLICK_CALL = "whatsapp", "llamar"
 CLICK_KINDS = (CLICK_WHATSAPP, CLICK_CALL)
 CLICK_SESSION_MEMORY = 200
 
+# --- Botón «Volver»: adónde lleva si no hay página anterior en el historial ---
+# Primero se busca el endpoint exacto (None = sin botón: es la página de arranque) y luego el prefijo más específico.
+BACK_FALLBACK_EXACT = {
+    "main.home": None,
+    "listings.index": "main.home",
+    "profiles.panel": "main.home",
+    "admin.dashboard": "main.home",
+    "agenda.index": "main.home",
+    "tips.index": "main.home",
+    "prices.index": "main.home",
+}
+BACK_FALLBACK_PREFIXES = (
+    ("listings.", "listings.index"),
+    ("profiles.public", "listings.index"),
+    ("profiles.", "profiles.panel"),
+    ("alerts.", "profiles.panel"),
+    ("admin.", "admin.dashboard"),
+    ("agenda.", "agenda.index"),
+    ("tips.", "tips.index"),
+    ("prices.", "prices.index"),
+)
+BACK_DEFAULT = "main.home"
+
 # --- Sitemap ---
 SITEMAP_MAX_LISTINGS = 5000
 

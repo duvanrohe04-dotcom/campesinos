@@ -10,6 +10,11 @@
 {%- endif -%}
 {%- endmacro %}
 
+{# «Volver»: regresa a la página anterior del historial; sin JavaScript o sin historial va a `href`. #}
+{% macro back_button(href, label="Volver") -%}
+<a href="{{ href }}" data-back class="btn btn-outline btn-sm">{{ ui('arrow-left', 'w-5 h-5') }}{{ label }}</a>
+{%- endmacro %}
+
 {# El celular no va en estos enlaces: href lleva a una ruta del sitio que lo revela o redirige (ver listings/routes.py) #}
 {% macro whatsapp_button(href, label="Escribir por WhatsApp", full=True) -%}
 <a href="{{ href }}" target="_blank" rel="noopener nofollow" class="btn btn-lg btn-whatsapp{{ ' w-full' if full }}">

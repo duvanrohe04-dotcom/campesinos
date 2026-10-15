@@ -8,6 +8,17 @@
     if (close) { var dlg = close.closest('dialog'); if (dlg) dlg.close(); }
   });
 
+  // «Volver»: página anterior del historial si es de este mismo sitio; si no, el enlace de respaldo
+  document.addEventListener('click', function (e) {
+    var back = e.target.closest('[data-back]');
+    if (!back || e.defaultPrevented || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    var from = document.referrer;
+    if (history.length > 1 && from && from.indexOf(location.origin + '/') === 0 && from !== location.href) {
+      e.preventDefault();
+      history.back();
+    }
+  });
+
   // Confirmaciones sencillas en formularios de acción
   document.addEventListener('submit', function (e) {
     var msg = e.target.getAttribute && e.target.getAttribute('data-confirm');

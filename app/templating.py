@@ -9,6 +9,9 @@ from .constants import (
     AD_TYPE_SHORT,
     AD_TYPES,
     ATTR_TEXT_MAX,
+    BACK_DEFAULT,
+    BACK_FALLBACK_EXACT,
+    BACK_FALLBACK_PREFIXES,
     CATEGORY_PHOTO_DIR,
     EVENT_KINDS,
     LISTING_STATUSES,
@@ -35,6 +38,17 @@ def event_url(event, external: bool = False) -> str:
     return url_for("agenda.detail", slug_id=f"{event.slug}-{event.id}", _external=external)
 
 
+def back_target(endpoint: str | None) -> str | None:
+    """Dirección del botón «Volver» cuando no hay página anterior; None si la página no lleva el botón (el inicio)."""
+    if endpoint in BACK_FALLBACK_EXACT:
+        target = BACK_FALLBACK_EXACT[endpoint]
+    else:
+        target = next(
+            (to for prefix, to in BACK_FALLBACK_PREFIXES if (endpoint or "").startswith(prefix)), BACK_DEFAULT
+        )
+    return url_for(target) if target else None
+
+
 def category_photo(category: Category) -> str | None:
     """Ruta (dentro de static/) de la foto de la categoría raíz, o None si no tiene y se usa el icono."""
     relative = f"{CATEGORY_PHOTO_DIR}/{category.root.slug}.webp"
@@ -51,6 +65,7 @@ def register_template_helpers(app: Flask) -> None:
         listing_url=listing_url,
         event_url=event_url,
         category_photo=category_photo,
+        back_target=back_target,
         ATTR_TEXT_MAX=ATTR_TEXT_MAX,
         OTHER_CHOICES=OTHER_CHOICES,
         VILLAGE_OTHER_ID=VILLAGE_OTHER_ID,
