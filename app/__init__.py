@@ -117,6 +117,7 @@ def create_app(config=None) -> Flask:
 
     from . import models  # noqa: F401  (registra los modelos para las migraciones)
     from .cli import register_cli
+    from .services import mailer
     from .templating import register_template_helpers
 
     _register_blueprints(app)
@@ -125,5 +126,7 @@ def create_app(config=None) -> Flask:
     register_cli(app)
     register_error_handlers(app)
     configure_logging(app)
+    if problem := mailer.config_problem(app.config):
+        app.logger.warning("Correo: %s", problem)
     _add_security_headers(app)
     return app
