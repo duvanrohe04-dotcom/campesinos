@@ -76,9 +76,52 @@
       box.hidden = !sel || sel.value !== OTHER_VILLAGE;
     });
   }
-  document.addEventListener('change', syncOtherFields);
-  window.syncOtherFields = syncOtherFields;
-  syncOtherFields();
+  // Datos condicionales (p. ej. «¿Preñada?» solo si el sexo es Hembra): se muestran u ocultan según la respuesta del
+  // dato del que dependen. Oculto = deshabilitado: no se exige ni se envía.
+  function syncConditionalFields() {
+    document.querySelectorAll('[data-show-if]').forEach(function (box) {
+      var scope = box.closest('fieldset') || document;  // el mismo dato existe en cada categoría: se mira el de su bloque
+      var picked = scope.querySelector('input[name="' + box.getAttribute('data-show-if') + '"]:checked:not(:disabled)');
+      var values = [];
+      try { values = JSON.parse(box.getAttribute('data-show-values') || '[]'); } catch (err) { /* sin condición válida */ }
+      var show = !!picked && values.indexOf(picked.value) > -1;
+      box.hidden = !show;
+      box.querySelectorAll('input, select, textarea').forEach(function (el) { el.disabled = !show; });
+    });
+  }
+  // Datos que decide el tipo elegido (p. ej. «Toros» → sexo Macho): se marcan solos y no se preguntan. El tipo declara
+  // sus datos en data-fixed y cada pregunta de opciones lleva data-attr. Cambiar de tipo vuelve a preguntarlos.
+  function syncFixedFields() {
+    var cat = document.querySelector('input[name="category_id"]:checked:not(:disabled)');
+    var fixed = {};
+    try { fixed = JSON.parse((cat && cat.getAttribute('data-fixed')) || '{}') || {}; } catch (err) { /* sin datos fijos */ }
+    document.querySelectorAll('[data-attr]').forEach(function (box) {
+      var block = box.closest('fieldset');
+      if (block && block.disabled) return;  // bloque de otra categoría
+      var key = box.getAttribute('data-attr').replace(/^attr_/, '');
+      var note = box.nextElementSibling && box.nextElementSibling.hasAttribute('data-fixed-note') ? box.nextElementSibling : null;
+      var radio = Object.prototype.hasOwnProperty.call(fixed, key) ? Array.prototype.filter.call(
+        box.querySelectorAll('input[type="radio"]'), function (r) { return r.value === fixed[key]; })[0] : null;
+      if (radio) {
+        radio.checked = true;
+        box.hidden = true; box.setAttribute('data-locked', '');
+        if (!note) {
+          note = document.createElement('p');
+          note.setAttribute('data-fixed-note', ''); note.className = 'mb-4 font-bold text-tierra-700';
+          box.parentNode.insertBefore(note, box.nextSibling);
+        }
+        var legend = box.querySelector('legend');
+        note.textContent = (legend ? legend.textContent.replace(/\s*\*\s*$/, '') : key) + ': ' + fixed[key];
+      } else if (box.hasAttribute('data-locked')) {
+        box.hidden = false; box.removeAttribute('data-locked');
+        if (note) note.parentNode.removeChild(note);
+      }
+    });
+  }
+  function syncRules() { syncOtherFields(); syncFixedFields(); syncConditionalFields(); }  // en este orden: lo fijo alimenta lo condicional
+  document.addEventListener('change', syncRules);
+  window.syncOtherFields = syncRules;  // publish.js lo llama al restaurar el borrador
+  syncRules();
 
   // Panel de filtros: abierto por defecto en escritorio
   var fp = document.getElementById('filters-panel');

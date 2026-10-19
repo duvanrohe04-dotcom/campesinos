@@ -188,6 +188,8 @@ def save_attribute(form, category: Category, attr: AttributeDef | None) -> Attri
     target.unit = (form.unit.data or "").strip() or None
     target.help_text = (form.help_text.data or "").strip() or None
     target.is_filterable = form.is_filterable.data
+    target.show_if_key = form.show_if_key.data or None
+    target.show_if_values = form.show_if_value_list() if target.show_if_key else None
     target.is_active = form.is_active.data if attr else True
     target.position = form.position.data if form.position.data is not None else len(category.attribute_defs)
     db.session.add(target)
@@ -207,6 +209,8 @@ def attribute_form_defaults(attr: AttributeDef) -> dict:
         "min_value": "" if attr.min_value is None else f"{attr.min_value:g}",
         "max_value": "" if attr.max_value is None else f"{attr.max_value:g}",
         "is_filterable": attr.is_filterable,
+        "show_if_key": attr.show_if_key or "",
+        "show_if_values": ", ".join(attr.show_if_values or []),
         "position": attr.position,
         "is_active": attr.is_active,
     }

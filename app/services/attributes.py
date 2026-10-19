@@ -1,7 +1,7 @@
 """Atributos dinámicos por categoría: definiciones en BD, valores en Listing.attrs (JSON/JSONB)."""
 
 import math
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import Any
 
 from ..constants import AGE_MAX_MONTHS, ATTR_TEXT_MAX, OTHER_CHOICES
@@ -21,6 +21,42 @@ def defs_for(category: Category | None) -> list[AttributeDef]:
         .order_by(AttributeDef.position, AttributeDef.id)
         .all()
     )
+
+
+def is_shown(d: AttributeDef, value_of: Callable[[str], Any]) -> bool:
+    """¿Se pregunta (y se muestra) este dato? Los condicionales (p. ej. «Preñada») solo aplican si el dato del que
+    dependen (`show_if_key`, p. ej. «sexo») tiene uno de los valores de `show_if_values` (p. ej. «Hembra»).
+
+    `value_of(clave)` devuelve el valor actual de otro dato: del formulario al validar, o de los guardados al mostrar.
+    """
+    if not d.show_if_key:
+        return True
+    value = value_of(d.show_if_key)
+    if isinstance(value, bool):  # los Sí/No se guardan como True/False y se envían como «si»/«no»
+        value = "si" if value else "no"
+    return str(value or "").strip() in (d.show_if_values or [])
+
+
+def visible_defs(category: Category | None, value_of: Callable[[str], Any]) -> list[AttributeDef]:
+    """Los datos que aplican a esta categoría con las respuestas actuales, en orden.
+
+    Las reglas se encadenan: un dato oculto cuenta como «sin respuesta» para los que dependen de él (si no está
+    preñada no se pregunta cuántos meses de gestación). Los datos que fija la subcategoría (`fixed_attrs`: «Toros» →
+    sexo Macho) cuentan como respondidos con ese valor, diga lo que diga el formulario."""
+    fixed = (category.fixed_attrs or {}) if category else {}
+    shown: dict[str, bool] = {}
+
+    def answer(key: str) -> Any:
+        if key in fixed:
+            return fixed[key]
+        return value_of(key) if shown.get(key, True) else None
+
+    result = []
+    for d in defs_for(category):
+        shown[d.key] = is_shown(d, answer)
+        if shown[d.key]:
+            result.append(d)
+    return result
 
 
 def _number(raw: str, d: AttributeDef, as_int: bool) -> int | float:
@@ -76,11 +112,13 @@ def coerce(d: AttributeDef, raw: str, form: Mapping[str, str]) -> Any:
 
 def validate_attrs(category: Category, form: Mapping[str, str]) -> tuple[dict[str, Any], dict[str, str]]:
     """Valida los datos específicos contra las definiciones. Devuelve (limpios, errores).
-    Las claves desconocidas se ignoran (nunca se guardan)."""
+    Las claves desconocidas se ignoran (nunca se guardan). Un dato condicional que no aplica (p. ej. «Preñada» en un
+    macho) no se exige ni se guarda, aunque llegue en el formulario."""
     clean: dict[str, Any] = {}
     errors: dict[str, str] = {}
-    for d in defs_for(category):
-        raw = (form.get(f"attr_{d.key}") or "").strip()
+    fixed = category.fixed_attrs or {}
+    for d in visible_defs(category, lambda key: form.get(f"attr_{key}")):
+        raw = str(fixed[d.key]) if d.key in fixed else (form.get(f"attr_{d.key}") or "").strip()
         if raw == "":
             if d.required:
                 errors[f"attr_{d.key}"] = "Este dato es obligatorio."
@@ -139,7 +177,7 @@ def display_attrs(listing: Listing) -> list[tuple[str, str]]:
     """Lista [(etiqueta, valor_formateado)] para la ficha de detalle."""
     values = listing.attrs or {}
     rows = []
-    for d in defs_for(listing.category):
+    for d in visible_defs(listing.category, values.get):
         if d.key not in values:
             continue
         text = format_value(d, values[d.key])
@@ -151,8 +189,9 @@ def display_attrs(listing: Listing) -> list[tuple[str, str]]:
 def form_values_from_attrs(category: Category, attrs: dict[str, Any] | None) -> dict[str, str]:
     """Convierte attrs guardados en valores de formulario (para editar/duplicar)."""
     out: dict[str, str] = {}
-    for d in defs_for(category):
-        if d.key not in (attrs or {}):
+    attrs = attrs or {}
+    for d in visible_defs(category, attrs.get):
+        if d.key not in attrs:
             continue
         v = attrs[d.key]
         if d.type == "bool":

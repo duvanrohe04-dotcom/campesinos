@@ -83,6 +83,8 @@ def _parse_price(form: Mapping[str, str], category: Category | None, ad_type: st
     unit = form.get("price_unit", "")
     if category and unit not in category.units:
         errors["price_unit"] = "Elige cómo cobras (por kilo, por cabeza…)."
+    if unit == PRICE_BY_AGREEMENT:  # «a convenir» no lleva valor: aunque lleguen pesos, no se guardan
+        return None, unit
     price = None
     raw = (form.get("price") or "").strip()
     if raw:

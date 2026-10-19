@@ -26,7 +26,21 @@
     });
     var r = form.querySelector('input[name="root_id"]:checked');
     document.getElementById('ica-notice').classList.toggle('hidden', !(r && r.getAttribute('data-ica')));
+    syncPrice();  // al cambiar de producto cambian las unidades de precio
   }
+  /* ---------- «A convenir»: sin precio ni «negociable» (oculto y deshabilitado = no se envía) ---------- */
+  function syncPrice() {
+    var box = document.getElementById('price-fields');
+    if (!box) return;
+    var unit = form.querySelector('input[name="price_unit"]:checked:not(:disabled)');
+    var agreed = !!unit && unit.value === 'a convenir';
+    box.hidden = agreed;
+    box.querySelectorAll('input').forEach(function (el) { el.disabled = agreed; });
+    var ref = document.getElementById('price-reference');
+    if (agreed && ref) ref.classList.add('hidden');
+  }
+  form.addEventListener('change', syncPrice);
+
   form.querySelectorAll('input[name="root_id"]').forEach(function (r) {
     r.addEventListener('change', function () {
       syncRoot();
@@ -77,11 +91,11 @@
       }
     }
     sec.querySelectorAll('input[data-req], select[data-req]').forEach(function (el) {
-      if (el.closest('fieldset:disabled')) return;
+      if (el.disabled || el.closest('fieldset:disabled')) return;  // también los datos condicionales que no aplican
       if (!el.value.trim()) bad(el, 'Este dato es obligatorio.');
     });
     sec.querySelectorAll('div[data-req]').forEach(function (g) {
-      if (g.closest('fieldset:disabled')) return;
+      if (g.closest('fieldset:disabled') || g.closest('[data-show-if][hidden]')) return;
       var radios = g.querySelectorAll('input[type="radio"]');
       if (radios.length && !g.querySelector('input[type="radio"]:checked')) bad(g, 'Elige una opción.');
     });
@@ -330,6 +344,10 @@
     }
     apply('root_id');
     syncRoot();  // habilita el bloque de la categoría elegida antes de llenar sus campos
+    Object.keys(d).forEach(function (name) { if (name !== 'root_id') apply(name); });
+    // Los datos condicionales (p. ej. «Preñada») estaban deshabilitados hasta conocer la respuesta de los que dependen
+    // (el sexo): se actualizan y se vuelven a llenar.
+    if (window.syncOtherFields) window.syncOtherFields();
     Object.keys(d).forEach(function (name) { if (name !== 'root_id') apply(name); });
     form.querySelectorAll('[data-village-select]').forEach(function (s) {
       var v = d[s.name]; var src = document.getElementById(s.getAttribute('data-mun-source'));

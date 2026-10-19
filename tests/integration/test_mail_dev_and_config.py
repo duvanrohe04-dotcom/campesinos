@@ -86,3 +86,47 @@ def test_config_problem(settings, expected):
     base = {"MAIL_SERVER": "", "MAIL_USERNAME": "", "MAIL_PASSWORD": "", "DEBUG": False, "TESTING": False}
     problem = mailer.config_problem({**base, **settings})
     assert (expected in problem) if expected else problem is None
+
+
+def _gmail(**changes):
+    base = {
+        "MAIL_BACKEND": "smtp", "MAIL_SERVER": "smtp.gmail.com", "MAIL_PORT": 587, "MAIL_USE_TLS": True,
+        "MAIL_USERNAME": "tucorreo@gmail.com", "MAIL_PASSWORD": "abcdefghijklmnop", "MAIL_FROM": "x@y.com",
+    }  # fmt: skip
+    return {**base, **changes}
+
+
+def test_diagnose_never_shows_the_password_and_flags_nothing_when_all_is_fine():
+    text = "\n".join(mailer.diagnose(_gmail()))
+    assert "abcdefghijklmnop" not in text and "16 caracteres" in text and "⚠" not in text
+
+
+@pytest.mark.parametrize(
+    ("changes", "hint"),
+    [
+        ({"MAIL_PASSWORD": "abcd efgh ijkl mnop"}, "tiene espacios"),
+        ({"MAIL_PASSWORD": "lbufntjjntdugob"}, "tiene 16 letras y la tuya tiene 15"),
+        ({"MAIL_USERNAME": "tucorreo"}, "correo completo"),
+        ({"MAIL_BACKEND": "console"}, "no es «smtp»"),
+        ({"MAIL_USE_TLS": False}, "MAIL_USE_TLS=true"),
+    ],
+)
+def test_diagnose_points_at_the_usual_mistakes(changes, hint):
+    assert hint in "\n".join(mailer.diagnose(_gmail(**changes)))
+
+
+def test_test_mail_command_sends_and_reports(app):
+    mailer.outbox.clear()
+    result = app.test_cli_runner().invoke(args=["test-mail", "alguien@example.com"])
+    assert result.exit_code == 0 and "Listo" in result.output
+    assert mailer.outbox[-1].to == "alguien@example.com"
+
+
+def test_test_mail_command_shows_the_exact_smtp_error(app, monkeypatch):
+    def broken(*args, **kwargs):
+        raise mailer.MailError("Falló el envío SMTP: (535, b'Username and Password not accepted')")
+
+    app.config["MAIL_BACKEND"] = "smtp"
+    monkeypatch.setattr(mailer, "_send_smtp", broken)
+    result = app.test_cli_runner().invoke(args=["test-mail", "alguien@example.com"])
+    assert result.exit_code != 0 and "535" in result.output and "MAIL_SERVER" in result.output

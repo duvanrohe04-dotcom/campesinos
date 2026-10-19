@@ -5,6 +5,9 @@
 @layer base {
   html { font-size: 17px; -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
   html.text-large { font-size: 21px; }
+  /* El atributo `hidden` siempre oculta. Sin esto, clases como .alert o .btn (display: flex) lo anulan y se ven avisos
+     que deberían estar ocultos, p. ej. «El formulario no terminó de cargar». */
+  [hidden] { display: none !important; }
   [data-speak][aria-pressed="true"], [data-dictate][aria-pressed="true"] { @apply bg-sol-300 border-sol-600; }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
   body { @apply bg-tierra-50 text-tierra-900 font-sans antialiased; }

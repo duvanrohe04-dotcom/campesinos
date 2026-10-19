@@ -12,6 +12,12 @@
   {{ wtf_field(form.unit, "Ej: kg, m, semanas") }}
   <div class="grid grid-cols-2 gap-3">{{ wtf_field(form.min_value) }}{{ wtf_field(form.max_value) }}</div>
   {{ wtf_field(form.help_text, "Ej: Cebú, Holstein") }}
+  <div class="card p-4 mb-4 bg-tierra-50">
+    <p class="font-bold">Pregunta condicional (opcional)</p>
+    <p class="text-sm text-tierra-600 mb-3">Para que este dato solo se pregunte en algunos casos. Ej: «Preñada» solo si «Sexo» es «Hembra».</p>
+    {{ wtf_field(form.show_if_key) }}
+    {{ wtf_field(form.show_if_values, "Separados por coma. Ej: Hembra") }}
+  </div>
   {{ wtf_field(form.position, inputmode="numeric") }}
   {{ wtf_checkbox(form.required) }}
   {{ wtf_checkbox(form.is_filterable) }}

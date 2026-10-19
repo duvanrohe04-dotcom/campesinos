@@ -32,3 +32,15 @@ def test_publish_script_has_fallbacks_for_old_phones(client):
 def test_geolocation_has_a_timeout(client):
     script = client.get("/static/js/map.js").get_data(as_text=True)
     assert "timeout: 15000" in script and script.count("GEO_OPTIONS") >= 3
+
+
+def test_hidden_attribute_always_hides_even_on_flex_components(client):
+    """Sin esto, `.alert` (display: flex) anulaba `hidden` y el aviso «El formulario no terminó de cargar» se veía siempre."""
+    css = client.get("/static/css/app.css").get_data(as_text=True)
+    assert "[hidden]{display:none!important}" in css
+
+
+def test_voice_buttons_are_shown_when_the_browser_supports_them(client):
+    """Los botones «Escuchar» y «Hablar» vienen ocultos en el HTML: el script debe mostrarlos si hay soporte."""
+    script = client.get("/static/js/a11y.js").get_data(as_text=True)
+    assert "b.hidden = !canSpeak" in script and "b.hidden = !Recognition" in script

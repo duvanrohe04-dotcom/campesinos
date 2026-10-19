@@ -81,6 +81,39 @@ def config_problem(config: Mapping[str, Any]) -> str | None:
     return None
 
 
+GMAIL_APP_PASSWORD_LENGTH = 16  # las claves de aplicación de Google siempre tienen 16 letras
+
+
+def diagnose(config: Mapping[str, Any]) -> list[str]:
+    """Resumen de la configuración de correo (sin mostrar la clave) y pistas de lo que suele estar mal."""
+    password = config["MAIL_PASSWORD"] or ""
+    lines = [
+        f"MAIL_BACKEND  = {config['MAIL_BACKEND']}",
+        f"MAIL_SERVER   = {config['MAIL_SERVER'] or '(vacío)'}",
+        f"MAIL_PORT     = {config['MAIL_PORT']}  (587 = STARTTLS, 465 = SSL directo)",
+        f"MAIL_USE_TLS  = {config['MAIL_USE_TLS']}",
+        f"MAIL_USERNAME = {config['MAIL_USERNAME'] or '(vacío)'}",
+        f"MAIL_PASSWORD = {'definida, ' + str(len(password)) + ' caracteres' if password else '(vacía)'}",
+        f"MAIL_FROM     = {config['MAIL_FROM']}",
+    ]
+    hints = []
+    if config["MAIL_BACKEND"] != "smtp":
+        hints.append("MAIL_BACKEND no es «smtp»: no sale ningún correo real. Pon MAIL_BACKEND=smtp.")
+    if config["MAIL_USERNAME"] and "@" not in config["MAIL_USERNAME"]:
+        hints.append("MAIL_USERNAME debe ser el correo completo, por ejemplo tucorreo@gmail.com.")
+    if "gmail" in (config["MAIL_SERVER"] or "").lower():
+        if " " in password:
+            hints.append("MAIL_PASSWORD tiene espacios: pégala sin espacios (16 letras seguidas).")
+        elif password and len(password) != GMAIL_APP_PASSWORD_LENGTH:
+            hints.append(
+                f"La clave de aplicación de Google tiene {GMAIL_APP_PASSWORD_LENGTH} letras y la tuya tiene "
+                f"{len(password)}: vuelve a copiarla (no la escribas a mano) o crea otra."
+            )
+        if config["MAIL_PORT"] == 587 and not config["MAIL_USE_TLS"]:
+            hints.append("Con el puerto 587 Gmail exige MAIL_USE_TLS=true.")
+    return [*lines, *(f"  ⚠ {hint}" for hint in hints)]
+
+
 def send_email(to: str, subject: str, body: str) -> None:
     """Envía un correo de texto. Lanza MailError si falla (el llamador decide qué decirle a la persona)."""
     mail = Mail(to=to, subject=subject, body=body)

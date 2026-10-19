@@ -3,6 +3,20 @@
 SEXO = ["Macho", "Hembra"]
 A = lambda key, label, type="text", **kw: dict(key=key, label=label, type=type, **kw)
 
+# Datos que ya decide el tipo de anuncio: no se preguntan, se rellenan solos (un toro siempre es macho).
+# Clave = nombre de la subcategoría; valor = {dato: respuesta}. Los datos deben existir en su categoría.
+FIXED_BY_SUBCATEGORY = {
+    "Toros": {"sexo": "Macho"},
+    "Novillos": {"sexo": "Macho"},
+    "Vacas": {"sexo": "Hembra"},
+    "Vacas paridas": {"sexo": "Hembra"},
+    "Cerdas de cría": {"sexo": "Hembra"},
+    "Caballos": {"tipo": "Caballo"},
+    "Yeguas": {"tipo": "Yegua"},
+    "Mulas": {"tipo": "Mula"},
+    "Burros": {"tipo": "Burro"},
+}
+
 CATEGORIES = [
     dict(
         slug="agricolas",
@@ -46,7 +60,30 @@ CATEGORIES = [
                 choices=["Leche", "Carne", "Doble propósito", "Cría"],
                 is_filterable=True,
             ),
-            A("prenada", "Preñada", "bool"),
+            # Preguntas condicionales: «Preñada» solo a las hembras; los meses de gestación solo si está preñada;
+            # los litros de leche solo si el propósito es dar leche.
+            A("prenada", "Preñada", "bool", show_if_key="sexo", show_if_values=["Hembra"]),
+            A(
+                "meses_gestacion",
+                "Meses de gestación",
+                "int",
+                unit="meses",
+                min_value=1,
+                max_value=9,
+                show_if_key="prenada",
+                show_if_values=["si"],
+            ),
+            A(
+                "litros_dia",
+                "Litros de leche por día",
+                "decimal",
+                unit="L",
+                min_value=0,
+                max_value=80,
+                help_text="Ej: 14",
+                show_if_key="proposito",
+                show_if_values=["Leche", "Doble propósito"],
+            ),
             A("vacunacion", "Vacunación al día", "bool"),
         ],
     ),
@@ -74,6 +111,7 @@ CATEGORIES = [
             A("proposito", "Propósito", "choice", choices=["Trabajo", "Paso", "Cría"], is_filterable=True),
             A("amansado", "Amansado", "bool"),
             A("papeles", "Con registro / papeles", "bool"),
+            A("prenada", "Preñada", "bool", show_if_key="tipo", show_if_values=["Yegua", "Mula"]),
         ],
     ),
     dict(
@@ -90,6 +128,7 @@ CATEGORIES = [
             A("edad", "Edad", "age", is_filterable=True),
             A("peso", "Peso aproximado", "int", unit="kg", min_value=1, max_value=500, is_filterable=True),
             A("proposito", "Propósito", "choice", choices=["Engorde", "Cría", "Reproductor"], is_filterable=True),
+            A("prenada", "Preñada", "bool", show_if_key="sexo", show_if_values=["Hembra"]),
         ],
     ),
     dict(

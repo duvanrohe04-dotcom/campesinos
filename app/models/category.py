@@ -24,6 +24,8 @@ class Category(db.Model):
     requires_ica = db.Column(db.Boolean, nullable=False, default=False)
     home_section = db.Column(db.String(20))  # 'animales' | 'mesa' | None
     price_units = db.Column(JSONType, nullable=False, default=list)
+    # Datos que el tipo ya decide (solo subcategorías): {"sexo": "Macho"} en «Toros». No se preguntan, se rellenan.
+    fixed_attrs = db.Column(JSONType)
 
     children = db.relationship(
         "Category",
@@ -94,6 +96,10 @@ class AttributeDef(db.Model):
     is_filterable = db.Column(db.Boolean, nullable=False, default=False)
     position = db.Column(db.Integer, nullable=False, default=0)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
+    # Pregunta condicional: este dato solo se pide/muestra si el dato `show_if_key` tiene uno de los valores de
+    # `show_if_values`. Ej: «Preñada» solo si «sexo» es ["Hembra"]. Sin `show_if_key` se pide siempre.
+    show_if_key = db.Column(db.String(40))
+    show_if_values = db.Column(JSONType)
 
     category = db.relationship(
         "Category", backref=db.backref("attribute_defs", order_by="AttributeDef.position", cascade="all, delete-orphan")

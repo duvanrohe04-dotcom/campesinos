@@ -14,7 +14,7 @@ def test_attrs_valid_and_age_in_months(app):
 
 
 def test_attrs_required_choice_and_range(app):
-    category = Category.query.filter_by(slug="novillos").first()
+    category = Category.query.filter_by(slug="terneros").first()  # «Terneros» sí pregunta el sexo
     _, errors = validate_attrs(category, {})
     assert "attr_sexo" in errors
     _, errors = validate_attrs(category, {"attr_sexo": "Otro", "attr_peso": "99999"})

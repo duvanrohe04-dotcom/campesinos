@@ -61,9 +61,45 @@ class AttributeForm(BaseForm):
     is_filterable = BooleanField("Usar como filtro en el listado")
     is_active = BooleanField("Visible", default=True)
 
+    show_if_key = SelectField("Preguntar solo si…", validate_choice=False, default="")
+    show_if_values = StringField(
+        # Sin Optional(): con el campo vacío cortaría la validación y no se avisaría que falta cuándo se pregunta
+        "…tiene alguno de estos valores",
+        validators=[Length(max=200)],
+        description="Separados por coma",
+    )
+
     def __init__(self, *args, category: Category, attr: AttributeDef | None = None, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.category, self.attr = category, attr
+        self.show_if_key.choices = [("", "Siempre se pregunta"), *((d.key, d.label) for d in self._controlling_defs())]
+
+    def _controlling_defs(self) -> list[AttributeDef]:
+        """Datos de esta categoría de los que puede depender otro: listas de opciones y Sí/No (no él mismo)."""
+        own_key = self.attr.key if self.attr else None
+        return [
+            d
+            for d in AttributeDef.query.filter_by(category_id=self.category.id).order_by(AttributeDef.position)
+            if d.type in ("choice", "bool") and d.key != own_key
+        ]
+
+    def show_if_value_list(self) -> list[str]:
+        return [v.strip() for v in (self.show_if_values.data or "").split(",") if v.strip()]
+
+    def validate_show_if_values(self, field: StringField) -> None:
+        key = self.show_if_key.data
+        if not key:
+            return
+        controlling = next((d for d in self._controlling_defs() if d.key == key), None)
+        if not controlling:
+            raise ValidationError("Elige uno de los datos de la lista.")
+        allowed = controlling.choices if controlling.type == "choice" else ["si", "no"]
+        values = self.show_if_value_list()
+        if not values:
+            raise ValidationError("Escribe cuándo se pregunta. Ej: Hembra")
+        wrong = [v for v in values if v not in (allowed or [])]
+        if wrong:
+            raise ValidationError(f"«{wrong[0]}» no es una opción de ese dato. Opciones: {', '.join(allowed or [])}")
 
     def validate_key(self, field: StringField) -> None:
         if self.attr:

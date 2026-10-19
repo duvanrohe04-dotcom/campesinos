@@ -5,6 +5,7 @@ from flask import Flask, current_app
 
 from ..extensions import db
 from ..models import User
+from ..services import mailer
 from ..services.backup import BackupError, backup_sqlite, sqlite_path
 from ..services.expiry import expire_listings
 from ..services.prices import update_snapshots
@@ -70,6 +71,21 @@ def register_cli(app: Flask) -> None:
                 return
             raise click.ClickException(str(error)) from None
         click.echo(f"Copia lista: {target} ({target.stat().st_size // 1024} KB). Copias viejas borradas: {removed}")
+
+    @app.cli.command("test-mail")
+    @click.argument("to")
+    def test_mail_command(to: str) -> None:
+        """Envía un correo de prueba a TO y muestra la configuración (sin la clave) y el error exacto si falla.
+
+        Úsalo en la terminal de Coolify cuando no lleguen los códigos: `flask test-mail tucorreo@gmail.com`."""
+        click.echo("\n".join(mailer.diagnose(current_app.config)))
+        try:
+            mailer.send_email(
+                to, f"Prueba de correo · {current_app.config['SITE_NAME']}", "Si lees esto, el correo funciona."
+            )
+        except mailer.MailError as error:
+            raise click.ClickException(f"No se pudo enviar: {error}") from None
+        click.echo(f"\nListo: se pidió el envío a {to}. Revisa la bandeja de entrada y la carpeta de spam.")
 
     @app.cli.command("check-saved-searches")
     def check_saved_searches_command() -> None:

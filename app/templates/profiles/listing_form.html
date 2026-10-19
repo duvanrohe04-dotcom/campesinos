@@ -15,10 +15,15 @@
   {% set name = 'attr_' ~ d.key %}
   {% set dom = root_id ~ '-' ~ name %}
   {% set req = d.required %}
+  {# Dato condicional (p. ej. «Preñada» solo si es Hembra): app.js lo muestra u oculta según la respuesta del dato del que depende #}
+  {% if d.show_if_key %}
+  {% set shown = (values.get('attr_' ~ d.show_if_key) or '') in (d.show_if_values or []) %}
+  <div data-show-if="attr_{{ d.show_if_key }}" data-show-values="{{ (d.show_if_values or [])|tojson|forceescape }}" {% if not shown %}hidden{% endif %}>
+  {% endif %}
   {% if d.type == 'choice' %}
-    <div {% if req %}data-req{% endif %}>{{ choice_pick(name, d.label, d.choices|zip(d.choices), values, errors, 'grid-cols-2', req, d.help_text, dom) }}</div>
+    <div data-attr="{{ name }}" {% if req %}data-req{% endif %}>{{ choice_pick(name, d.label, d.choices|zip(d.choices), values, errors, 'grid-cols-2', req, d.help_text, dom) }}</div>
   {% elif d.type == 'bool' %}
-    <div {% if req %}data-req{% endif %}>{{ yesno_field(name, d.label, values, errors, req) }}</div>
+    <div data-attr="{{ name }}" {% if req %}data-req{% endif %}>{{ yesno_field(name, d.label, values, errors, req) }}</div>
   {% elif d.type == 'age' %}
     <div class="mb-4">
       <label class="label" for="f-{{ dom }}">{{ d.label }}{% if req %} <span class="text-secondary-700">*</span>{% endif %}</label>
@@ -37,6 +42,7 @@
   {% else %}
     {{ text_field(name, d.label, values, errors, d.help_text, '', maxlength=120, required=req, extra='data-req' if req else '', dom=dom) }}
   {% endif %}
+  {% if d.show_if_key %}</div>{% endif %}
 {% endmacro %}
 
 {% block content %}
@@ -107,7 +113,7 @@
         <legend class="label">¿Qué tipo de {{ r.name|lower }}?</legend>
         <div class="flex flex-wrap gap-2">
           {% for c in r.active_children %}
-          <label class="pick"><input type="radio" name="category_id" value="{{ c.id }}" {{ 'checked' if values.get('category_id') == c.id|string }}>
+          <label class="pick"><input type="radio" name="category_id" value="{{ c.id }}" data-fixed="{{ (c.fixed_attrs or {})|tojson|forceescape }}" {{ 'checked' if values.get('category_id') == c.id|string }}>
             <span class="pick-body !min-h-[3rem] !px-4 !py-2 !rounded-full">{{ c.name }}</span></label>
           {% endfor %}
         </div>
@@ -179,11 +185,13 @@
       {% endfor %}
       {{ err(errors, 'price_unit') }}
 
+      {# Con «a convenir» no hay precio ni «negociable»: publish.js oculta y deshabilita esta parte #}
+      <div id="price-fields">
       <div class="mb-4">
         <label class="label" for="f-price">Precio en pesos (COP)</label>
         <div class="relative"><span class="absolute left-4 top-1/2 -translate-y-1/2 font-extrabold text-tierra-600">$</span>
           <input class="input !pl-8 text-xl font-bold{{ ' input-error' if errors.get('price') }}" id="f-price" name="price" inputmode="numeric" placeholder="Ej: 3.200.000" value="{{ values.get('price', '') }}" autocomplete="off"></div>
-        <p class="help">Déjalo vacío solo si el precio es «a convenir».</p>
+        <p class="help">Déjalo vacío solo si buscas comprar, o si arriba elegiste «a convenir».</p>
         <div id="price-reference" class="hidden mt-2 rounded-xl bg-sol-100 border border-sol-300 p-3 text-sm" role="status" data-url="{{ url_for('prices.reference') }}">
           <span id="price-reference-text"></span>
           <button type="button" id="price-reference-use" class="btn btn-outline btn-sm mt-2">Usar este precio</button>
@@ -193,6 +201,7 @@
       <label class="flex items-center gap-3 mb-5 text-lg font-bold cursor-pointer">
         <input type="checkbox" name="negotiable" value="1" class="w-7 h-7 accent-primary-700" {{ 'checked' if values.get('negotiable') == '1' }}> El precio es negociable
       </label>
+      </div>
 
       <div class="mb-4">
         <label class="label" for="f-municipality_id">Municipio <span class="text-secondary-700" aria-hidden="true">*</span></label>

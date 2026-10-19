@@ -1,4 +1,4 @@
-﻿"""Carga de datos iniciales (idempotente). Los datos están en seed_data.py."""
+"""Carga de datos iniciales (idempotente). Los datos están en seed_data.py."""
 
 from datetime import timedelta
 
@@ -11,7 +11,7 @@ from ..utils import slugify, utcnow
 from .articles import save_article
 from .prices import backfill_snapshots
 from .seed_articles import ARTICLES
-from .seed_data import CATEGORIES, MUNICIPALITIES, SAMPLE_VILLAGES, SAMPLES
+from .seed_data import CATEGORIES, FIXED_BY_SUBCATEGORY, MUNICIPALITIES, SAMPLE_VILLAGES, SAMPLES
 from .seed_extra import EXTRA_PEOPLE, EXTRA_SAMPLES, PRICE_CLUSTERS, PRICE_FACTORS
 from .seed_photos import seed_photos
 
@@ -33,6 +33,7 @@ def seed_categories():
                 sub = Category(slug=slug)
                 db.session.add(sub)
             sub.name, sub.parent_id, sub.position, sub.icon = name, root.id, i, c["icon"]
+            sub.fixed_attrs = FIXED_BY_SUBCATEGORY.get(name)
         for i, a in enumerate(c["attrs"]):
             d = AttributeDef.query.filter_by(category_id=root.id, key=a["key"]).first() or AttributeDef(
                 category_id=root.id, key=a["key"]
@@ -41,6 +42,7 @@ def seed_categories():
             d.required, d.choices = a.get("required", False), a.get("choices")
             d.min_value, d.max_value, d.unit = a.get("min_value"), a.get("max_value"), a.get("unit")
             d.help_text, d.is_filterable = a.get("help_text"), a.get("is_filterable", False)
+            d.show_if_key, d.show_if_values = a.get("show_if_key"), a.get("show_if_values")
             db.session.add(d)
     db.session.commit()
 

@@ -25,9 +25,10 @@
   /* ---------- Escuchar (síntesis de voz) ---------- */
   var synth = window.speechSynthesis;
   var speakButtons = document.querySelectorAll('[data-speak]');
-  if (!synth || !window.SpeechSynthesisUtterance) {
-    speakButtons.forEach(function (b) { b.hidden = true; });
-  }
+  // Los botones vienen ocultos (`hidden`) para que sin JavaScript no queden botones muertos: se muestran solo si el
+  // navegador sabe leer en voz alta.
+  var canSpeak = !!(synth && window.SpeechSynthesisUtterance);
+  speakButtons.forEach(function (b) { b.hidden = !canSpeak; });
   function pickVoice() {
     var voices = synth.getVoices();
     return voices.find(function (v) { return /es[-_]CO/i.test(v.lang); }) ||
@@ -64,10 +65,8 @@
   /* ---------- Dictado por voz (reconocimiento de voz) ---------- */
   var Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   var micButtons = document.querySelectorAll('[data-dictate]');
-  if (!Recognition) {
-    micButtons.forEach(function (b) { b.hidden = true; });
-    return;
-  }
+  micButtons.forEach(function (b) { b.hidden = !Recognition; });  // igual que «Escuchar»: solo si hay reconocimiento de voz
+  if (!Recognition) return;
   var active = null, recognition = null;
   function stopDictation() {
     if (recognition) { try { recognition.stop(); } catch (e) { /* ya detenido */ } }

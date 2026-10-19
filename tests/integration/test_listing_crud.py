@@ -47,7 +47,9 @@ def test_create_requires_login(client):
 
 
 def test_create_validation_errors(seller):
-    response = seller.post("/publicar", data=form_data(title="ab", price="", attr_sexo=""))
+    # «Terneros» sí pregunta el sexo (en «Novillos» ya lo decide el tipo)
+    data = form_data(category_id=Category.sub_by_slug("terneros").id, title="ab", price="", attr_sexo="")
+    response = seller.post("/publicar", data=data)
     html = response.get_data(as_text=True)
     assert response.status_code == 200 and "5 a 80 letras" in html and "obligatorio" in html
     assert Listing.query.filter_by(title="ab").count() == 0
