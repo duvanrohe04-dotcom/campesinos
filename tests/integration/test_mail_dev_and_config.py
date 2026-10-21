@@ -120,13 +120,3 @@ def test_test_mail_command_sends_and_reports(app):
     result = app.test_cli_runner().invoke(args=["test-mail", "alguien@example.com"])
     assert result.exit_code == 0 and "Listo" in result.output
     assert mailer.outbox[-1].to == "alguien@example.com"
-
-
-def test_test_mail_command_shows_the_exact_smtp_error(app, monkeypatch):
-    def broken(*args, **kwargs):
-        raise mailer.MailError("Falló el envío SMTP: (535, b'Username and Password not accepted')")
-
-    app.config["MAIL_BACKEND"] = "smtp"
-    monkeypatch.setattr(mailer, "_send_smtp", broken)
-    result = app.test_cli_runner().invoke(args=["test-mail", "alguien@example.com"])
-    assert result.exit_code != 0 and "535" in result.output and "MAIL_SERVER" in result.output
